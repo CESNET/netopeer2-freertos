@@ -1,0 +1,14 @@
+diff --git a/include/libssh/priv.h b/include/libssh/priv.h
+index 9220f83e..868ace5a 100644
+--- a/include/libssh/priv.h
++++ b/include/libssh/priv.h
+@@ -359,7 +359,9 @@ int ssh_connector_remove_event(ssh_connector connector);
+ #define ZERO_STRUCTP(x) do { if ((x) != NULL) memset((char *)(x), 0, sizeof(*(x))); } while(0)
+ 
+ /** Get the size of an array */
++#ifndef ARRAY_SIZE
+ #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
++#endif
+ 
+ #ifndef HAVE_EXPLICIT_BZERO
+ void explicit_bzero(void *s, size_t n);

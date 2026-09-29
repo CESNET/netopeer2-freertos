@@ -1,0 +1,58 @@
+diff --git a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
+index 1ee0f2f..3e92354 100755
+--- a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
++++ b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
+@@ -62,6 +62,8 @@ typedef struct pthread_internal
+     void * ( *pvStartRoutine )( void * ); /**< Application thread function. */
+     void * xTaskArg;                      /**< Arguments for application thread function. */
+     TaskHandle_t xTaskHandle;             /**< FreeRTOS task handle. */
++    StackType_t *puxStackBuffer;          /**< FreeRTOS static task stack. */
++    StaticTask_t pxTaskBuffer;            /**< FreeRTOS static task buffer. */
+     StaticSemaphore_t xJoinBarrier;       /**< Synchronizes the two callers of pthread_join. */
+     StaticSemaphore_t xJoinMutex;         /**< Ensures that only one other thread may join this thread. */
+     void * xReturn;                       /**< Return value of pvStartRoutine. */
+@@ -336,6 +338,19 @@ int pthread_create( pthread_t * thread,
+         }
+     }
+ 
++    if( iStatus == 0 )
++    {
++        /* Allocate memory for new thread stack. */
++        pxThread->puxStackBuffer = ( StackType_t * ) malloc( pxThread->xAttr.usStackSize );
++
++        if( pxThread->puxStackBuffer == NULL )
++        {
++            /* No memory. */
++            free( pxThread );
++            iStatus = EAGAIN;
++        }
++    }
++
+     if( iStatus == 0 )
+     {
+         /* Suspend all tasks to create a critical section. This ensures that
+@@ -343,15 +358,18 @@ int pthread_create( pthread_t * thread,
+         vTaskSuspendAll();
+ 
+         /* Create the FreeRTOS task that will run the pthread. */
+-        if( xTaskCreate( prvRunThread,
+-                         posixconfigPTHREAD_TASK_NAME,
+-                         ( configSTACK_DEPTH_TYPE ) ( pxThread->xAttr.usStackSize / sizeof( StackType_t ) ),
+-                         ( void * ) pxThread,
+-                         xSchedParam.sched_priority,
+-                         &pxThread->xTaskHandle ) != pdPASS )
++        pxThread->xTaskHandle = xTaskCreateStatic( prvRunThread,
++                posixconfigPTHREAD_TASK_NAME,
++                ( configSTACK_DEPTH_TYPE ) ( pxThread->xAttr.usStackSize / sizeof( StackType_t ) ),
++                ( void * ) pxThread,
++                xSchedParam.sched_priority,
++                pxThread->puxStackBuffer,
++                &pxThread->pxTaskBuffer);
++        if( pxThread->xTaskHandle == NULL )
+         {
+             /* Task creation failed, no memory. */
+             free( pxThread );
++            free( pxThread->puxStackBuffer );
+             iStatus = EAGAIN;
+         }
+         else

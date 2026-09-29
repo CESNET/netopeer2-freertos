@@ -1,0 +1,52 @@
+{
+  "ietf-netconf-server:netconf-server": {
+    "listen": {
+      "endpoints": {
+        "endpoint": [
+          {
+            "name": "ssh-password-auth-endpt",
+            "ssh": {
+              "tcp-server-parameters": {
+                "local-bind": [
+                  {
+                    "local-address": "0.0.0.0",
+                    "local-port": 830
+                  }
+                ]
+              },
+              "ssh-server-parameters": {
+                "server-identity": {
+                  "host-key": [
+                    {
+                      "name": "key",
+                      "public-key": {
+                        "inline-definition": {
+                          "public-key-format": "ietf-crypto-types:ssh-public-key-format",
+                          "public-key": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDRIB2eNSRWU+HNWRUGKr76ghCLg8RaMlUCps9lBjnc6ggaJl2Q+TOLn8se2wAdK3lYBMz3dcqR+SlU7eB8wJAc=",
+                          "private-key-format": "ietf-crypto-types:ec-private-key-format",
+                          "cleartext-private-key": "MHcCAQEEICQ2fr9Jt2xluom0YQQ7HseE8YTo5reZRVcQENKUWOrooAoGCCqGSM49AwEHoUQDQgAENEgHZ41JFZT4c1ZFQYqvvqCEIuDxFoyVQKmz2UGOdzqCBomXZD5M4ufyx7bAB0reVgEzPd1ypH5KVTt4HzAkBw=="
+                        }
+                      }
+                    }
+                  ]
+                },
+                "client-authentication": {
+                  "users": {
+                    "user": [
+                      {
+                        "name": "admin",
+                        "password": {
+                          "hashed-password": "$0$admin"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

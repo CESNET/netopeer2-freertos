@@ -1,0 +1,153 @@
+diff --git a/src/session_mbedtls.c b/src/session_mbedtls.c
+index 81af476..54f9439 100644
+--- a/src/session_mbedtls.c
++++ b/src/session_mbedtls.c
+@@ -1249,82 +1249,36 @@ nc_tls_ctx_destroy_wrap(struct nc_tls_ctx *tls_ctx)
+ void *
+ nc_tls_import_privkey_file_wrap(const char *privkey_path)
+ {
+-    int rc;
+-    mbedtls_pk_context *pkey;
+-    mbedtls_ctr_drbg_context *ctr_drbg;
+-    mbedtls_entropy_context *entropy;
++    (void)privkey_path;
+ 
+-    if (nc_tls_rng_new(&ctr_drbg, &entropy)) {
+-        return NULL;
+-    }
+-
+-    pkey = nc_tls_pkey_new_wrap();
+-    if (!pkey) {
+-        nc_tls_rng_destroy(ctr_drbg, entropy);
+-        return NULL;
+-    }
++    ERR(NULL, "Importing files is not supported.");
+ 
+-    rc = mbedtls_pk_parse_keyfile(pkey, privkey_path, NULL, mbedtls_ctr_drbg_random, ctr_drbg);
+-    nc_tls_rng_destroy(ctr_drbg, entropy);
+-    if (rc) {
+-        nc_mbedtls_strerr(NULL, rc, "Parsing private key from file \"%s\" failed", privkey_path);
+-        nc_tls_privkey_destroy_wrap(pkey);
+-        return NULL;
+-    }
+-    return pkey;
++    return NULL;
+ }
+ 
+ int
+ nc_client_tls_load_cert_key_wrap(const char *cert_path, const char *key_path, void **cert, void **pkey)
+ {
+-    int ret = 0;
+-    mbedtls_x509_crt *c;
+-    mbedtls_pk_context *pk;
+-
+-    NC_CHECK_ARG_RET(NULL, cert_path, key_path, cert, pkey, 1);
+-
+-    c = nc_tls_cert_new_wrap();
+-    if (!c) {
+-        return 1;
+-    }
+-
+-    ret = mbedtls_x509_crt_parse_file(c, cert_path);
+-    if (ret) {
+-        nc_mbedtls_strerr(NULL, ret, "Parsing certificate from file \"%s\" failed", cert_path);
+-        goto cleanup;
+-    }
+-
+-    pk = nc_tls_import_privkey_file_wrap(key_path);
+-    if (!pk) {
+-        ret = 1;
+-        goto cleanup;
+-    }
++    (void)cert_path;
++    (void)key_path;
++    (void)cert;
++    (void)pkey;
+ 
+-    *cert = c;
+-    c = NULL;
+-    *pkey = pk;
++    ERR(NULL, "Importing files is not supported.");
+ 
+-cleanup:
+-    nc_tls_cert_destroy_wrap(c);
+-    return ret;
++    return -1;
+ }
+ 
+ int
+ nc_client_tls_load_trusted_certs_wrap(void *cert_store, const char *file_path, const char *dir_path)
+ {
+-    int rc;
+-
+-    if (file_path && ((rc = mbedtls_x509_crt_parse_file(cert_store, file_path)) < 0)) {
+-        nc_mbedtls_strerr(NULL, rc, "Loading CA certificate from file \"%s\" failed", file_path);
+-        return 1;
+-    }
++    (void)cert_store;
++    (void)file_path;
++    (void)dir_path;
+ 
+-    if (dir_path && ((rc = mbedtls_x509_crt_parse_path(cert_store, dir_path)) < 0)) {
+-        nc_mbedtls_strerr(NULL, rc, "Loading CA certificate from directory \"%s\" failed", dir_path);
+-        return 1;
+-    }
++    ERR(NULL, "Importing files is not supported.");
+ 
+-    return 0;
++    return -1;
+ }
+ 
+ int
+@@ -1563,22 +1517,11 @@ nc_tls_close_notify_wrap(void *tls_session)
+ void *
+ nc_tls_import_cert_file_wrap(const char *cert_path)
+ {
+-    int rc;
+-    mbedtls_x509_crt *c;
+-
+-    c = nc_tls_cert_new_wrap();
+-    if (!c) {
+-        return NULL;
+-    }
++    (void)cert_path;
+ 
+-    rc = mbedtls_x509_crt_parse_file(c, cert_path);
+-    if (rc) {
+-        nc_mbedtls_strerr(NULL, rc, "Parsing certificate from file \"%s\" failed", cert_path);
+-        nc_tls_cert_destroy_wrap(c);
+-        return NULL;
+-    }
++    ERR(NULL, "Importing files is not supported.");
+ 
+-    return c;
++    return NULL;
+ }
+ 
+ /**
+@@ -1897,22 +1840,11 @@ nc_tls_mpi2bin_wrap(void *mpi, unsigned char **bin, int *bin_len)
+ void *
+ nc_tls_import_pubkey_file_wrap(const char *pubkey_path)
+ {
+-    int rc = 0;
+-    mbedtls_pk_context *pk = NULL;
++    (void)pubkey_path;
+ 
+-    pk = nc_tls_pkey_new_wrap();
+-    if (!pk) {
+-        return NULL;
+-    }
++    ERR(NULL, "Importing files is not supported.");
+ 
+-    rc = mbedtls_pk_parse_public_keyfile(pk, pubkey_path);
+-    if (rc) {
+-        nc_mbedtls_strerr(NULL, rc, "Parsing public key from file \"%s\" failed", pubkey_path);
+-        nc_tls_privkey_destroy_wrap(pk);
+-        return NULL;
+-    }
+-
+-    return pk;
++    return NULL;
+ }
+ 
+ /**

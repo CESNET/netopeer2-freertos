@@ -1,0 +1,44 @@
+diff --git a/src/ly_wrap.c b/src/ly_wrap.c
+index b4fd3131..609a3333 100644
+--- a/src/ly_wrap.c
++++ b/src/ly_wrap.c
+@@ -240,17 +240,15 @@ sr_ly_ctx_new(struct ly_ctx **ly_ctx)
+ 
+     sr_ly_log_setup();
+ 
+-    /* create a new context */
+-    if (ly_ctx_new(ly_yang_module_dir(), ctx_opts, ly_ctx)) {
+-        sr_errinfo_new_ly(&err_info, SR_ERR_LY);
+-        sr_errinfo_new(&err_info, SR_ERR_INTERNAL, "Failed to create a new libyang context.");
++    /* get the repo search path yang dir */
++    if ((err_info = sr_path_yang_dir(&yang_dir))) {
+         goto cleanup;
+     }
+ 
+-    /* set search path for the internal YANG modules */
+-    r = ly_ctx_set_searchdir(*ly_ctx, sr_yang_module_dir());
+-    if (r && (r != LY_EEXIST)) {
++    /* create a new context */
++    if (ly_ctx_new(yang_dir, ctx_opts, ly_ctx)) {
+         sr_errinfo_new_ly(&err_info, SR_ERR_LY);
++        sr_errinfo_new(&err_info, SR_ERR_INTERNAL, "Failed to create a new libyang context.");
+         goto cleanup;
+     }
+ 
+@@ -282,16 +280,6 @@ sr_ly_ctx_new(struct ly_ctx **ly_ctx)
+         goto cleanup;
+     }
+ 
+-    /* set the repo search path yang dir */
+-    if ((err_info = sr_path_yang_dir(&yang_dir))) {
+-        goto cleanup;
+-    }
+-    r = ly_ctx_set_searchdir(*ly_ctx, yang_dir);
+-    if (r && (r != LY_EEXIST)) {
+-        sr_errinfo_new_ly(&err_info, SR_ERR_LY);
+-        goto cleanup;
+-    }
+-
+     /* set the ext callback */
+     ly_ctx_set_ext_data_clb(*ly_ctx, sr_ly_ext_data_clb, NULL);
+ 

@@ -1,0 +1,18 @@
+diff --git a/src/config.h.in b/src/config.h.in
+index f52ba361..1a2b3c4d 100644
+--- a/src/config.h.in
++++ b/src/config.h.in
+@@ -199,7 +199,12 @@
+ #define SR_DS_PLG_REDIS_SOCKET        "@REDIS_SOCKET@"
+ 
+ /** memory address to try to map the printed libyang context to */
+-#define SR_PRINTED_LYCTX_ADDRESS      (void *)@PRINTED_CONTEXT_ADDRESS@
++extern char __netconfContextStart[];
++static inline void *sr_printed_lyctx_address(void)
++{
++    return (void *)__netconfContextStart;
++}
++#define SR_PRINTED_LYCTX_ADDRESS      sr_printed_lyctx_address()
+ 
+ /** Defined if MAP_FIXED_NOREPLACE is available on the platform. */
+ #cmakedefine HAVE_MAP_FIXED_NOREPLACE

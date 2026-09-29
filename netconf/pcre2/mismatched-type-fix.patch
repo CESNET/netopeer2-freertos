@@ -1,0 +1,15 @@
+diff --git a/src/pcre2_compile.c b/src/pcre2_compile.c
+index 8e6787a..aee1e1d 100644
+--- a/src/pcre2_compile.c
++++ b/src/pcre2_compile.c
+@@ -1416,8 +1416,8 @@ PCRE2_SPTR p = *ptrptr;
+ PCRE2_SPTR pp;
+ BOOL yield = FALSE;
+ BOOL had_minimum = FALSE;
+-int32_t min = 0;
+-int32_t max = REPEAT_UNLIMITED; /* This value is larger than MAX_REPEAT_COUNT */
++int min = 0;
++int max = REPEAT_UNLIMITED; /* This value is larger than MAX_REPEAT_COUNT */
+ 
+ *errorcodeptr = 0;
+ while (p < ptrend && (*p == CHAR_SPACE || *p == CHAR_HT)) p++;

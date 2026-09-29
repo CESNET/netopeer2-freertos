@@ -1,0 +1,137 @@
+diff --git a/src/session_client.c b/src/session_client.c
+index f02f227..9c49897 100644
+--- a/src/session_client.c
++++ b/src/session_client.c
+@@ -1566,20 +1566,18 @@ nc_saddr2str(const struct sockaddr *saddr, char **str_ip, uint16_t *port)
+ 
+     assert((saddr->sa_family == AF_INET) || (saddr->sa_family == AF_INET6));
+ 
+-    str_len = (saddr->sa_family == AF_INET) ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN;
++    if (saddr->sa_family == AF_INET6) {
++        ERR(NULL, "IPv6 not supported.");
++        return -1;
++    }
++
++    str_len = INET_ADDRSTRLEN;
+     *str_ip = malloc(str_len);
+     NC_CHECK_ERRMEM_RET(!(*str_ip), -1);
+ 
+-    if (saddr->sa_family == AF_INET) {
+-        addr = &((struct sockaddr_in *)saddr)->sin_addr;
+-        if (port) {
+-            *port = ntohs(((struct sockaddr_in *)saddr)->sin_port);
+-        }
+-    } else {
+-        addr = &((struct sockaddr_in6 *)saddr)->sin6_addr;
+-        if (port) {
+-            *port = ntohs(((struct sockaddr_in6 *)saddr)->sin6_port);
+-        }
++    addr = &((struct sockaddr_in *)saddr)->sin_addr;
++    if (port) {
++        *port = ntohs(((struct sockaddr_in *)saddr)->sin_port);
+     }
+     if (!inet_ntop(saddr->sa_family, addr, *str_ip, str_len)) {
+         ERR(NULL, "Converting host to IP address failed (%s).", strerror(errno));
+diff --git a/src/session_server.c b/src/session_server.c
+index 684a224..b943323 100644
+--- a/src/session_server.c
++++ b/src/session_server.c
+@@ -287,7 +287,6 @@ nc_sock_bind_inet(int sock, const char *address, uint16_t port, int is_ipv4)
+ {
+     struct sockaddr_storage saddr;
+     struct sockaddr_in *saddr4;
+-    struct sockaddr_in6 *saddr6;
+ 
+ #ifdef NC_ENABLE_IP_FREEBIND
+     int opt;
+@@ -325,33 +324,8 @@ nc_sock_bind_inet(int sock, const char *address, uint16_t port, int is_ipv4)
+         }
+ 
+     } else {
+-        saddr6 = (struct sockaddr_in6 *)&saddr;
+-
+-        saddr6->sin6_family = AF_INET6;
+-        saddr6->sin6_port = htons(port);
+-
+-        /* determine the address */
+-        if (!address) {
+-            /* set the implicit default IPv6 address */
+-            address = "::";
+-        }
+-        if (inet_pton(AF_INET6, address, &saddr6->sin6_addr) != 1) {
+-            ERR(NULL, "Failed to convert IPv6 address \"%s\".", address);
+-            return -1;
+-        }
+-
+-#ifdef NC_ENABLE_IP_FREEBIND
+-        opt = 1;
+-        if (setsockopt(sock, IPPROTO_IPV6, IPV6_FREEBIND, &opt, sizeof(opt))) {
+-            ERR(NULL, "Could not add IPV6_FREEBIND option (%s).", strerror(errno));
+-            return -1;
+-        }
+-#endif
+-
+-        if (bind(sock, (struct sockaddr *)saddr6, sizeof(struct sockaddr_in6)) == -1) {
+-            ERR(NULL, "Could not bind [%s]:%" PRIu16 " (%s).", address, port, strerror(errno));
+-            return -1;
+-        }
++        ERR(NULL, "IPv6 not supported.");
++        return -1;
+     }
+ 
+     return 0;
+@@ -680,32 +654,6 @@ nc_sock_host_inet(const struct sockaddr_in *addr, char **host, uint16_t *port)
+     return 0;
+ }
+ 
+-/**
+- * @brief Evaluate socket name and port number for AF_INET6 socket.
+- * @param[in] addr is pointing to structure filled by accept function which was successful.
+- * @param[out] host is pointer to char* to which the socket name will be set. It must not be NULL.
+- * @param[out] port is pointer to uint16_t to which the port number will be set. It must not be NULL.
+- * @return 0 in case of success. Call free function for parameter host to avoid a memory leak.
+- * @return -1 in case of error. Parameter host is set to the NULL and port is unchanged.
+- */
+-static int
+-nc_sock_host_inet6(const struct sockaddr_in6 *addr, char **host, uint16_t *port)
+-{
+-    *host = malloc(INET6_ADDRSTRLEN);
+-    NC_CHECK_ERRMEM_RET(!(*host), -1);
+-
+-    if (!inet_ntop(AF_INET6, &addr->sin6_addr, *host, INET6_ADDRSTRLEN)) {
+-        ERR(NULL, "inet_ntop failed (%s).", strerror(errno));
+-        free(*host);
+-        *host = NULL;
+-        return -1;
+-    }
+-
+-    *port = ntohs(addr->sin6_port);
+-
+-    return 0;
+-}
+-
+ /**
+  * @brief Get the client's host information from the accepted socket address.
+  *
+@@ -730,10 +678,6 @@ nc_sock_host_get(const struct sockaddr_storage *saddr, int client_sock, char **c
+         if ((rc = nc_sock_host_inet((struct sockaddr_in *)saddr, client_address, client_port))) {
+             goto cleanup;
+         }
+-    } else if (saddr->ss_family == AF_INET6) {
+-        if ((rc = nc_sock_host_inet6((struct sockaddr_in6 *)saddr, client_address, client_port))) {
+-            goto cleanup;
+-        }
+     } else {
+         ERR(NULL, "Source host of an unknown protocol family.");
+         rc = -1;
+@@ -771,10 +715,6 @@ nc_sock_log_accepted(const struct sockaddr_storage *saddr, const struct nc_endpt
+         /* IPv4 socket */
+         VRB(NULL, "Accepted a new connection on %s:%" PRIu16 " from %s:%" PRIu16 ".", bind->address, bind->port,
+                 client_address, client_port);
+-    } else if (saddr->ss_family == AF_INET6) {
+-        /* IPv6 socket */
+-        VRB(NULL, "Accepted a new connection on [%s]:%" PRIu16 " from [%s]:%" PRIu16 ".", bind->address, bind->port,
+-                client_address, client_port);
+     } else {
+         ERR(NULL, "Source host of an unknown protocol family.");
+         return -1;

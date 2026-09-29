@@ -1,0 +1,14 @@
+diff --git a/src/common.c b/src/common.c
+index 86a1ab9e..3e3a3427 100644
+--- a/src/common.c
++++ b/src/common.c
+@@ -1123,7 +1124,8 @@ sr_path_ctx_shm(int tmp, char **path)
+ {
+     sr_error_info_t *err_info = NULL;
+ 
+-    if (asprintf(path, "%s/%s_ctx%s", sr_get_shm_path(), sr_get_shm_prefix(), tmp ? ".tmp" : "") == -1) {
++    /* hardcoded context path */
++    if (asprintf(path, "/etc/sysrepo/%s_ctx%s", sr_get_shm_prefix(), tmp ? ".tmp" : "") == -1) {
+         SR_ERRINFO_MEM(&err_info);
+         *path = NULL;
+     }

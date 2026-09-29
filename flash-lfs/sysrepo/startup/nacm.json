@@ -1,0 +1,5 @@
+{
+  "ietf-netconf-acm:nacm": {
+    "enable-nacm": false
+  }
+}

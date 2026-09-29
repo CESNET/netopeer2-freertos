@@ -1,0 +1,41 @@
+# example snippet from parent CMakeLists.txt
+#
+# Variables to set:
+#
+# NETCONF_FIND_ROOT_PATH - appended to CMAKE_FIND_ROOT_PATH
+# NETCONF_INCLUDE_DIRS - include dirs to search in
+# NETCONF_SYSTEM_INCLUDE_DIRS - include dirs to search in for system headers
+# NETCONF_DEFINITIONS - defined compile macros to use
+# NETCONF_BASE_LIBS - base platform libraries required for compiling static emb_posix library
+#
+# Variables expected to be set implicitly:
+#
+# CMAKE_C_FLAGS - compilation flags
+# MBEDTLS_PATH - root of the mbedTLS library
+#
+# Expected available linked libraries:
+#
+# mbedtls
+# mbedcrypto
+# mbedx509
+#
+# Expected global properties set:
+#
+# INCLUDE_DIRS_PROP - global include dirs
+
+
+# get netconf find root path (netconf performs analysis of the available components)
+get_filename_component(NETCONF_FIND_ROOT_PATH ${SdkDirPath} ABSOLUTE)
+
+# get netconf platform includes
+get_target_property(NETCONF_INCLUDE_DIRS platform-sdk INTERFACE_INCLUDE_DIRECTORIES)
+set(NETCONF_SYSTEM_INCLUDE_DIRS ${SdkDirPath}/middleware/lwip/src/include/compat/posix)
+
+# get netconf additional flags
+get_target_property(NETCONF_DEFINITIONS platform-sdk INTERFACE_COMPILE_DEFINITIONS)
+
+# libraries implementing base interfaces such as FS, networking, ...
+set(NETCONF_BASE_LIBS rt1180sys lwip)
+
+# defines netconf static library to be linked to the main target
+add_subdirectory(netconf)

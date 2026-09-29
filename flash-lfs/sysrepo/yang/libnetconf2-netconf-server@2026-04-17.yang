@@ -1,0 +1,471 @@
+module libnetconf2-netconf-server {
+  yang-version 1.1;
+  namespace "urn:cesnet:libnetconf2-netconf-server";
+  prefix np2;
+
+  import ietf-netconf-server {
+    prefix ncs;
+  }
+
+  import ietf-crypto-types {
+    prefix ct;
+  }
+
+  import iana-ssh-public-key-algs {
+    prefix sshpka;
+  }
+
+  import iana-ssh-key-exchange-algs {
+    prefix sshkea;
+  }
+
+  import iana-ssh-encryption-algs {
+    prefix sshea;
+  }
+
+  import iana-ssh-mac-algs {
+    prefix sshma;
+  }
+
+  import ietf-tls-server {
+    prefix tlss;
+  }
+
+  revision "2026-04-17" {
+    description "Change SSH banner description, reference and string length to reflect its correct purpose.";
+  }
+
+  revision "2025-11-11" {
+    description "Removed obsolete SSH algorithm identities due to IANA algorithms YANG models update.";
+  }
+
+  revision "2025-08-01" {
+    description "Added UNIX socket configuration.";
+  }
+
+  revision "2025-06-02" {
+    description "Removed presence from the <keyboard-interactive> container.";
+  }
+
+  revision "2025-01-23" {
+    description "Added a list of YANG modules skipped in the server <hello> message.";
+  }
+
+  revision "2024-07-09" {
+    description "Second revision.";
+  }
+
+  // Features
+
+  feature unix-socket-path {
+    description
+      "Indicates that the server supports configuration of the UNIX socket path.";
+    }
+
+  // Identities
+
+/*
+  identity ed25519-private-key-format {
+    base ct:private-key-format;
+    description
+      "This identity would indicate that the
+       private key is encoded in a ED25519PrivateKey
+       format. However no such format is currently
+       standardized or even exists.
+
+       If you wish to use a private key that uses
+       an ED25519 algorithm, you need to pick either
+       the private-key-info-format or
+       openssh-private-key-format identity.";
+  }
+*/
+
+  identity private-key-info-format {
+    base ct:private-key-format;
+    description
+      "Indicates that the private key is encoded
+       as a PrivateKeyInfo structure (from RFC 5208).
+
+       The expected header of the private key:
+       -----BEGIN PRIVATE KEY-----
+       The expected footer of the private key:
+       -----END PRIVATE KEY-----
+
+       Supported private key algorithms to use with
+       this format are: RSA, EC and ED25519.
+
+       Commonly used public key format for this
+       type of private key is represented by the
+       SubjectPublicKeyInfo identity.";
+
+    reference
+      "RFC 5208: PKCS #8: Private-Key Information
+                 Syntax Specification Version 1.2";
+  }
+
+  identity openssh-private-key-format {
+    base ct:private-key-format;
+    description
+      "Indicates that the private key is encoded
+       in the OpenSSH format.
+
+       The expected header of the private key:
+       -----BEGIN OPENSSH PRIVATE KEY-----
+       The expected footer of the private key:
+       -----END OPENSSH PRIVATE KEY-----
+
+       Supported private key algorithms to use with
+       this format are: RSA, EC and ED25519.
+
+       Commonly used public key format for this
+       type of private key is either the
+       SSH2 public key format (from RFC 4716)
+       or the Public key format defined in RFC 4253,
+       Section 6.6.";
+
+    reference
+      "The OpenSSH Private Key Format:
+        https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.key
+
+       RFC 4716:
+        The Secure Shell (SSH) Public Key File Format
+
+       RFC 4253:
+        The Secure Shell (SSH) Transport Layer Protocol";
+  }
+
+  // Typedefs
+
+  typedef time-period {
+    type string {
+      pattern '(1[0-2]|[1-9])m|[1-4]w|[1-7]d|(2[0-4]|1[0-9]|[1-9])h';
+    }
+
+    description
+      "The time-period type allows to specify time in either months, weeks, days, or hours.
+       Its purpose is to create time intervals for the certificate expiration notifications.";
+  }
+
+  // Groupings
+
+  grouping ssh-authentication-params-grouping {
+    description
+      "Grouping for SSH authentication parameters.";
+
+    leaf auth-timeout {
+      type uint16;
+      default 30;
+      units "seconds";
+      description
+        "Represents the maximum amount of seconds an authentication can go on for.";
+    }
+  }
+
+  grouping ssh-server-banner-grouping {
+    description
+      "Grouping for the SSH server banner.";
+
+    leaf banner {
+      type string;
+
+      description
+        "SSH banner sent to clients before authentication.
+         It can be used to provide information about the server or legal notices.
+         Note that the banner is sent before authentication, so it should not contain any sensitive information.";
+
+      reference
+        "RFC 4252: The Secure Shell (SSH) Authentication Protocol, section 5.4.";
+    }
+  }
+
+  grouping system-auth-public-keys-grouping {
+    description
+      "Grouping for using the system configured keys in the SSH public key authentication method.";
+
+      container use-system-keys {
+        presence
+          "Indicates that the given user will be authenticated using the system's configured public keys.";
+
+        description
+          "Authentication is done using the system's mechanisms.";
+
+        reference
+          "libnetconf2 documentation:
+              Section SSH";
+      }
+  }
+
+  grouping keyboard-interactive-grouping {
+    description
+      "Grouping for the SSH Keyboard interactive authentication method.";
+
+    container keyboard-interactive {
+      description
+        "Keyboard interactive SSH authentication method.";
+
+      reference
+        "RFC 4256:
+            Generic Message Exchange Authentication for
+            the Secure Shell Protocol (SSH)";
+
+      choice method {
+        description
+          "Method to perform the authentication with.";
+
+        container use-system-auth {
+          presence
+            "Indicates that the system will handle the authentication.";
+
+          description
+            "Authentication is done using the system's mechanisms.";
+
+          reference
+          "libnetconf2 documentation:
+              Section SSH";
+        }
+      }
+    }
+  }
+
+  grouping endpoint-reference-grouping {
+    description
+      "Grouping for the endpoint reference.";
+
+    leaf endpoint-reference {
+      type leafref {
+        path "/ncs:netconf-server/ncs:listen/ncs:endpoints/ncs:endpoint/ncs:name";
+      }
+      description
+        "Reference to another endpoint. The purpose is to use the referenced endpoint's authentication mechanisms.
+         If a connection occurs on an endpoint, the connecting user will be tried to be authenticated
+         using the given endpoint's defined methods. If the user wasn't authenticated and the endpoint
+         references another endpoint, the authentication will be tried again. However, this time
+         using the referenced endpoint's mechanisms. The references can be
+         multiple, however there must not be a cycle.";
+    }
+  }
+
+  // Augments
+
+  augment "/ncs:netconf-server/ncs:listen/ncs:endpoints/ncs:endpoint/ncs:transport/ncs:ssh" +
+          "/ncs:ssh/ncs:ssh-server-parameters/ncs:client-authentication" {
+    uses ssh-authentication-params-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:call-home/ncs:netconf-client/ncs:endpoints" +
+          "/ncs:endpoint/ncs:transport/ncs:ssh/ncs:ssh/ncs:ssh-server-parameters/ncs:client-authentication" {
+    uses ssh-authentication-params-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:listen/ncs:endpoints/ncs:endpoint/ncs:transport/ncs:ssh" +
+          "/ncs:ssh/ncs:ssh-server-parameters/ncs:server-identity" {
+    uses ssh-server-banner-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:call-home/ncs:netconf-client/ncs:endpoints" +
+          "/ncs:endpoint/ncs:transport/ncs:ssh/ncs:ssh/ncs:ssh-server-parameters/ncs:server-identity" {
+    uses ssh-server-banner-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:listen/ncs:endpoints/ncs:endpoint/ncs:transport/ncs:ssh/ncs:ssh/ncs:ssh-server-parameters" +
+          "/ncs:client-authentication/ncs:users/ncs:user/ncs:public-keys/ncs:inline-or-truststore" {
+    case system-auth-public-keys {
+      uses system-auth-public-keys-grouping;
+    }
+  }
+
+  augment "/ncs:netconf-server/ncs:call-home/ncs:netconf-client/ncs:endpoints/ncs:endpoint/ncs:transport/ncs:ssh" +
+          "/ncs:ssh/ncs:ssh-server-parameters/ncs:client-authentication/ncs:users/ncs:user/ncs:public-keys/ncs:inline-or-truststore" {
+    case system-auth-public-keys {
+      uses system-auth-public-keys-grouping;
+    }
+  }
+
+  augment "/ncs:netconf-server/ncs:listen/ncs:endpoints/ncs:endpoint/ncs:transport/ncs:ssh" +
+          "/ncs:ssh/ncs:ssh-server-parameters/ncs:client-authentication/ncs:users/ncs:user" {
+    uses keyboard-interactive-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:call-home/ncs:netconf-client/ncs:endpoints" +
+          "/ncs:endpoint/ncs:transport/ncs:ssh/ncs:ssh/ncs:ssh-server-parameters/ncs:client-authentication/ncs:users/ncs:user" {
+    uses keyboard-interactive-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:listen/ncs:endpoints/ncs:endpoint/ncs:transport/ncs:ssh" +
+          "/ncs:ssh/ncs:ssh-server-parameters/ncs:client-authentication" {
+    uses endpoint-reference-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:call-home/ncs:netconf-client/ncs:endpoints" +
+          "/ncs:endpoint/ncs:transport/ncs:ssh/ncs:ssh/ncs:ssh-server-parameters/ncs:client-authentication" {
+    uses endpoint-reference-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:listen/ncs:endpoints/ncs:endpoint/ncs:transport/ncs:tls" +
+          "/ncs:tls/ncs:tls-server-parameters/ncs:client-authentication" {
+    uses endpoint-reference-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:call-home/ncs:netconf-client/ncs:endpoints" +
+          "/ncs:endpoint/ncs:transport/ncs:tls/ncs:tls/ncs:tls-server-parameters/ncs:client-authentication" {
+    uses endpoint-reference-grouping;
+  }
+
+  augment "/ncs:netconf-server/ncs:listen/ncs:endpoints/ncs:endpoint/ncs:transport" {
+    case unix {
+      container unix {
+        description
+          "UNIX socket configuration to listen for NETCONF over UNIX socket connections.
+
+           The server will create a UNIX domain socket at the specified path
+           and listen for incoming NETCONF connections. Client authentication
+           is based on the connecting process's effective user ID.";
+
+        choice socket-path-config {
+          mandatory true;
+          description
+            "Selects how the UNIX domain socket path is determined.";
+          case socket-path {
+            if-feature "unix-socket-path";
+            leaf socket-path {
+              type string {
+                length "1..107";
+              }
+              description
+                "Relative filesystem path where the UNIX socket will be bound.
+                 The parent directory must be set by an internal server API setting.
+                 The final resolved path must be within the configured parent directory.
+
+                 Example: netconf.sock";
+            }
+          }
+          case hidden-path {
+            leaf hidden-path {
+              type empty;
+              description
+                "Indicates that the UNIX socket path is not configured via YANG, but is instead
+                 determined by internal server API settings.";
+            }
+          }
+        }
+
+        container socket-permissions {
+          description
+            "File system permissions for the created socket.
+             These settings control which processes can connect to the socket.";
+
+          leaf mode {
+            type string {
+              pattern "0?[0-7]{3}";
+            }
+            default "0660"; // defaults to rw-rw----
+            description
+              "Socket file permissions in octal format, e.g., 777 means
+               read, write and execute permissions for everyone.";
+          }
+
+          leaf owner {
+            type string;
+            description
+              "Owner (system user) of the socket file. If not specified,
+               the socket inherits the owner of the server process.";
+          }
+
+          leaf group {
+            type string;
+            description
+              "Group owner (system group) of the socket file. If not specified,
+               the socket inherits the group of the server process.";
+          }
+        }
+
+        container client-authentication {
+          description
+            "UNIX socket client authentication options, which provide mapping of system users to NETCONF users.";
+
+          list user-mapping {
+            description
+              "List of mappings of system users to explicit allowed NETCONF users they can authenticate as. If a user
+               connects that has no matching entry in this list, it can only authenticate with a NETCONF username equal
+               to the system username.";
+
+            key "system-user";
+
+            leaf system-user {
+              type string;
+              description
+                "UNIX system username of the connecting process.";
+            }
+
+            leaf-list netconf-user {
+              type string;
+              description
+                "Allowed NETCONF username for the UNIX system user. Special '*' value enables the system user to
+                 authenticate as any NETCONF user. In case there are no instances of this leaf-list, the system user
+                 cannot authenticate as any NETCONF user.";
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Protocol-accessible Nodes
+
+  container ln2-netconf-server {
+    container certificate-expiration-notif-intervals {
+      if-feature "ct:certificate-expiration-notification";
+
+      description
+        "Container for the certificate expiration notification intervals. Its child nodes describe the ability to set
+         the time intervals for the certificate expiration notifications. These intervals are given in the form of an
+         anchor and a period. By default, these notifications are generated 3, 2, and 1 month; 2 weeks; 7, 6, 5, 4, 3,
+         2 and 1 day before a certificate expires. Additionally, notifications are generated on the day of expiration
+         and every day thereafter.
+
+         Simplified example of YANG data that describe the default intervals:
+
+         Anchor         Period
+           3m     ...     1m
+           2w     ...     1w
+           7d     ...     1d
+        ";
+
+      list interval {
+        key "anchor period";
+
+        leaf anchor {
+          type time-period;
+
+          description
+            "The time anchor for the notification. The anchor is the time
+             before the certificate expiration when a notification will be sent.
+             It is essentially the lower bound of the given interval.";
+        }
+        leaf period {
+          type time-period;
+
+          // Require the period to be smaller than the anchor (only units are checked for simplicity)
+          must "(contains(., 'm') and contains(../anchor, 'm')) or
+                (contains(., 'w') and (contains(../anchor, 'm') or contains(../anchor, 'w'))) or
+                (contains(., 'd') and (contains(../anchor, 'm') or contains(../anchor, 'w') or contains(../anchor, 'd'))) or
+                contains(., 'h')" {
+                  error-message
+                    "Certificate expiration notification period must be smaller than the anchor.";
+                }
+
+          description
+            "The period of the notification. The period is the time
+             between two notifications within the given time interval.";
+        }
+      }
+    }
+
+    leaf-list ignored-hello-module {
+      type string;
+
+      description
+        "List of implemented sysrepo YANG modules that will not be reported the NETCONF server in its <hello> messages.";
+    }
+  }
+}

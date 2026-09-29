@@ -1,0 +1,216 @@
+diff --git a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_mqueue.c b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_mqueue.c
+index 88a312b..c8773bc 100755
+--- a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_mqueue.c
++++ b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_mqueue.c
+@@ -29,6 +29,7 @@
+  */
+ 
+ /* C standard library includes. */
++#include <stdlib.h>
+ #include <string.h>
+ 
+ /* FreeRTOS+POSIX includes. */
+@@ -208,7 +209,7 @@ static BaseType_t prvCreateNewMessageQueue( QueueListElement_t ** ppxMessageQueu
+     BaseType_t xStatus = pdTRUE;
+ 
+     /* Allocate space for a new queue element. */
+-    *ppxMessageQueue = pvPortMalloc( sizeof( QueueListElement_t ) );
++    *ppxMessageQueue = malloc( sizeof( QueueListElement_t ) );
+ 
+     /* Check that memory allocation succeeded. */
+     if( *ppxMessageQueue == NULL )
+@@ -225,7 +226,7 @@ static BaseType_t prvCreateNewMessageQueue( QueueListElement_t ** ppxMessageQueu
+         /* Check that queue creation succeeded. */
+         if( ( *ppxMessageQueue )->xQueue == NULL )
+         {
+-            vPortFree( *ppxMessageQueue );
++            free( *ppxMessageQueue );
+             xStatus = pdFALSE;
+         }
+     }
+@@ -233,13 +234,13 @@ static BaseType_t prvCreateNewMessageQueue( QueueListElement_t ** ppxMessageQueu
+     if( xStatus == pdTRUE )
+     {
+         /* Allocate space for the queue name plus null-terminator. */
+-        ( *ppxMessageQueue )->pcName = pvPortMalloc( xNameLength + 1 );
++        ( *ppxMessageQueue )->pcName = malloc( xNameLength + 1 );
+ 
+         /* Check that memory was successfully allocated for queue name. */
+         if( ( *ppxMessageQueue )->pcName == NULL )
+         {
+             vQueueDelete( ( *ppxMessageQueue )->xQueue );
+-            vPortFree( *ppxMessageQueue );
++            free( *ppxMessageQueue );
+             xStatus = pdFALSE;
+         }
+         else
+@@ -280,13 +281,13 @@ static void prvDeleteMessageQueue( const QueueListElement_t * const pxMessageQue
+                           ( void * ) &xQueueElement,
+                           0 ) == pdTRUE )
+     {
+-        vPortFree( xQueueElement.pcData );
++        free( xQueueElement.pcData );
+     }
+ 
+     /* Free memory used by this message queue. */
+     vQueueDelete( pxMessageQueue->xQueue );
+-    vPortFree( ( void * ) pxMessageQueue->pcName );
+-    vPortFree( ( void * ) pxMessageQueue );
++    free( ( void * ) pxMessageQueue->pcName );
++    free( ( void * ) pxMessageQueue );
+ }
+ 
+ /*-----------------------------------------------------------*/
+@@ -765,7 +766,7 @@ ssize_t mq_timedreceive( mqd_t mqdes,
+ 
+         /* Copy received data into given buffer, then free it. */
+         ( void ) memcpy( msg_ptr, xReceiveData.pcData, xReceiveData.xDataSize );
+-        vPortFree( xReceiveData.pcData );
++        free( xReceiveData.pcData );
+     }
+ 
+     return xStatus;
+@@ -843,7 +844,7 @@ int mq_timedsend( mqd_t mqdes,
+     if( iStatus == 0 )
+     {
+         xSendData.xDataSize = msg_len;
+-        xSendData.pcData = pvPortMalloc( msg_len );
++        xSendData.pcData = malloc( msg_len );
+ 
+         /* Check that memory allocation succeeded. */
+         if( xSendData.pcData == NULL )
+@@ -891,7 +892,7 @@ int mq_timedsend( mqd_t mqdes,
+             }
+ 
+             /* Free the allocated queue data. */
+-            vPortFree( xSendData.pcData );
++            free( xSendData.pcData );
+ 
+             iStatus = -1;
+         }
+diff --git a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
+index 2dadfe4..4d619b3 100755
+--- a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
++++ b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
+@@ -30,6 +30,7 @@
+ 
+ /* C standard library includes. */
+ #include <stddef.h>
++#include <stdlib.h>
+ #include <string.h>
+ 
+ /* FreeRTOS+POSIX includes. */
+@@ -117,7 +118,7 @@ static void prvExitThread( void )
+     {
+         ( void ) xTaskResumeAll();
+         /* For a detached thread, perform cleanup of thread object. */
+-        vPortFree( pxThread );
++        free( pxThread );
+         vTaskDelete( NULL );
+     }
+ }
+@@ -296,7 +297,7 @@ int pthread_create( pthread_t * thread,
+     struct sched_param xSchedParam = { .sched_priority = tskIDLE_PRIORITY };
+ 
+     /* Allocate memory for new thread object. */
+-    pxThread = ( pthread_internal_t * ) pvPortMalloc( sizeof( pthread_internal_t ) );
++    pxThread = ( pthread_internal_t * ) malloc( sizeof( pthread_internal_t ) );
+ 
+     if( pxThread == NULL )
+     {
+@@ -350,7 +351,7 @@ int pthread_create( pthread_t * thread,
+                          &pxThread->xTaskHandle ) != pdPASS )
+         {
+             /* Task creation failed, no memory. */
+-            vPortFree( pxThread );
++            free( pxThread );
+             iStatus = EAGAIN;
+         }
+         else
+@@ -468,7 +469,7 @@ int pthread_join( pthread_t pthread,
+         }
+ 
+         /* Free the thread object. */
+-        vPortFree( pxThread );
++        free( pxThread );
+ 
+         /* End the critical section. */
+         ( void ) xTaskResumeAll();
+@@ -520,7 +521,7 @@ int pthread_detach(pthread_t pthread)
+                vTaskDelete( pxThread->xTaskHandle );
+ 
+                /* Free the thread object. */
+-               vPortFree( pxThread );
++               free( pxThread );
+             }
+             else
+             {
+diff --git a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread_cond.c b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread_cond.c
+index badec75..50ded26 100755
+--- a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread_cond.c
++++ b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread_cond.c
+@@ -30,6 +30,7 @@
+ 
+ /* C standard library includes. */
+ #include <limits.h>
++#include <stdlib.h>
+ 
+ /* FreeRTOS+POSIX includes. */
+ #include "FreeRTOS_POSIX.h"
+@@ -68,7 +69,7 @@ static bool prvInitializeStaticCond( pthread_cond_internal_t * pxCond )
+          * section. */
+         if( (pxCond->xIsInitialized == pdFALSE) && (pxCond->tasksLenth > 0) )
+         {
+-            pxCond->xTasksWaiting = pvPortMalloc( sizeof(TaskHandle_t) * pxCond->tasksLenth );
++            pxCond->xTasksWaiting = malloc( sizeof(TaskHandle_t) * pxCond->tasksLenth );
+             if( pxCond->xTasksWaiting != NULL )
+             {
+                 /* Initialize Task List to NULL */
+@@ -128,7 +129,7 @@ int pthread_cond_destroy( pthread_cond_t * cond )
+     pthread_cond_internal_t * pxCond = ( pthread_cond_internal_t * ) ( cond );
+ 
+     /* Free all resources in use by the cond. */
+-    vPortFree(pxCond->xTasksWaiting);
++    free(pxCond->xTasksWaiting);
+ 
+     return 0;
+ }
+@@ -155,7 +156,7 @@ int pthread_cond_init( pthread_cond_t * cond,
+ 
+     if( iStatus == 0 )
+     {
+-        pxCond->xTasksWaiting = pvPortMalloc( sizeof(TaskHandle_t) * pxCond->tasksLenth );
++        pxCond->xTasksWaiting = malloc( sizeof(TaskHandle_t) * pxCond->tasksLenth );
+         if( pxCond->xTasksWaiting != NULL )
+         {
+             /* Initialize Task List to NULL */
+diff --git a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_timer.c b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_timer.c
+index 0b945d3..2a97912 100755
+--- a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_timer.c
++++ b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_timer.c
+@@ -31,6 +31,7 @@
+ /* C standard library includes. */
+ #include <errno.h>
+ #include <stddef.h>
++#include <stdlib.h>
+ 
+ /* FreeRTOS+POSIX includes. */
+ #include "FreeRTOS_POSIX.h"
+@@ -133,7 +134,7 @@ int timer_create( clockid_t clockid,
+     /* Allocate memory for a new timer object. */
+     if( iStatus == 0 )
+     {
+-        pxTimer = pvPortMalloc( sizeof( timer_internal_t ) );
++        pxTimer = malloc( sizeof( timer_internal_t ) );
+ 
+         if( pxTimer == NULL )
+         {
+@@ -188,7 +189,7 @@ int timer_delete( timer_t timerid )
+     }
+ 
+     /* Free the memory in use by the timer. */
+-    vPortFree( pxTimer );
++    free( pxTimer );
+ 
+     return 0;
+ }

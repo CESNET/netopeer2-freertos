@@ -1,0 +1,31 @@
+diff --git a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
+index f063160..f4bc8dc 100755
+--- a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
++++ b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
+@@ -42,7 +42,7 @@
+  */
+ typedef struct pthread_attr_internal
+ {
+-    uint16_t usStackSize;                /**< Stack size. */
++    configSTACK_DEPTH_TYPE usStackSize;  /**< Stack size. */
+     uint16_t usSchedPriorityDetachState; /**< Schedule priority 15 bits (LSB) Detach state: 1 bits (MSB) */
+ } pthread_attr_internal_t;
+ 
+@@ -274,7 +274,7 @@ int pthread_attr_setstacksize( pthread_attr_t * attr,
+     }
+     else
+     {
+-        pxAttr->usStackSize = ( uint16_t ) stacksize;
++        pxAttr->usStackSize = ( configSTACK_DEPTH_TYPE ) stacksize;
+     }
+ 
+     return iStatus;
+@@ -340,7 +340,7 @@ int pthread_create( pthread_t * thread,
+         /* Create the FreeRTOS task that will run the pthread. */
+         if( xTaskCreate( prvRunThread,
+                          posixconfigPTHREAD_TASK_NAME,
+-                         ( uint16_t ) ( pxThread->xAttr.usStackSize / sizeof( StackType_t ) ),
++                         ( configSTACK_DEPTH_TYPE ) ( pxThread->xAttr.usStackSize / sizeof( StackType_t ) ),
+                          ( void * ) pxThread,
+                          xSchedParam.sched_priority,
+                          &pxThread->xTaskHandle ) != pdPASS )

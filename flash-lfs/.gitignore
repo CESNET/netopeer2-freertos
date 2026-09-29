@@ -1,0 +1,6 @@
+input/etc/sysrepo/data/*.startup
+input/etc/sysrepo/data/*.perm
+input/etc/sysrepo/data/*.factory-default
+input/etc/sysrepo/yang/*.yang
+input/etc/sysrepo/sr_main_lock
+

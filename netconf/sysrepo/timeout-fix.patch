@@ -1,0 +1,22 @@
+diff --git a/src/common.h b/src/common.h
+index e9ed71d1..5fe9cf4b 100644
+--- a/src/common.h
++++ b/src/common.h
+@@ -115,7 +115,7 @@ struct srplg_ntf_s;
+ #define SR_CHANGE_CB_TIMEOUT 5000
+ 
+ /** default timeout for operational subscription callback (ms) */
+-#define SR_OPER_CB_TIMEOUT 5000
++#define SR_OPER_CB_TIMEOUT 500000
+ 
+ /** default timeout for RPC/action subscription callback (ms) */
+ #define SR_RPC_CB_TIMEOUT 2000
+@@ -127,7 +127,7 @@ struct srplg_ntf_s;
+ #define SR_SHMSUB_MANY_EVENT_TIMEOUT_STEP_MS 1
+ 
+ /** timeout for waiting until SRSN dispatch thread closes the read end of the notification pipe (ms) */
+-#define SR_SN_READ_DISPATCH_CLOSE_TIMEOUT 1000
++#define SR_SN_READ_DISPATCH_CLOSE_TIMEOUT 10000
+ 
+ /** permissions of main SHM lock file and main/mod/ext SHM */
+ #define SR_SHM_PERM 00666

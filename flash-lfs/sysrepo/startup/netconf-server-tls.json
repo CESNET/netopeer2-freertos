@@ -1,0 +1,97 @@
+{
+  "ietf-netconf-server:netconf-server": {
+    "listen": {
+      "endpoints": {
+        "endpoint": [
+          {
+            "name": "default-tls",
+            "tls": {
+              "tcp-server-parameters": {
+                "local-bind": [
+                  {
+                    "local-address": "0.0.0.0"
+                  }
+                ]
+              },
+              "tls-server-parameters": {
+                "server-identity": {
+                  "certificate": {
+                    "central-keystore-reference": {
+                      "asymmetric-key": "serverkey",
+                      "certificate": "servercert"
+                    }
+                  }
+                },
+                "client-authentication": {
+                  "ca-certs": {
+                    "central-truststore-reference": "cacerts"
+                  },
+                  "ee-certs": {
+                    "central-truststore-reference": "eecerts"
+                  }
+                }
+              },
+              "netconf-server-parameters": {
+                "client-identity-mappings": {
+                  "cert-to-name": [
+                    {
+                      "id": 1,
+                      "fingerprint": "04:09:85:68:72:F8:8D:BC:DA:06:68:8E:CF:B0:0F:14:6E:F8:54:D4:D6:8D:6C:5C:A3:1E:AF:44:DD:19:6C:8A:FE",
+                      "map-type": "ietf-x509-cert-to-name:specified",
+                      "name": "tls-test"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "ietf-keystore:keystore": {
+    "asymmetric-keys": {
+      "asymmetric-key": [
+        {
+          "name": "serverkey",
+          "public-key-format": "ietf-crypto-types:subject-public-key-info-format",
+          "public-key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl6Z2yRfK9jhmEPZUd9lgsma/kRBXhLuqmxWnQF0yq6exOGbXS6SZrnVKIWiqEAN+iUxUQ3GK6yaCkjRww9Y64dguxJU+tzcZWHpbg7xRUyBPCg34zJQzFN1ZoOaRcaAzPR1jq1SY5L+05r11DkHl1CvRIQZ0ZtaTFI8gjoR1tQF8jakb0hFCjew28D5BU/bTRAnt8co1f6I6g4P2qjR9c6jhVEc2Qm/+rd/N25FTKsGaxc9YZYzexjZQEv5T0oYwPmLVATiVBIcjtuV9u1D1EAtE8A33vcyqHagseywPjKMn7GSdZpWvTPaGvOWRq4F502rm3S0UE/9aLeovVuqTawIDAQAB",
+          "private-key-format": "ietf-crypto-types:rsa-private-key-format",
+          "cleartext-private-key": "MIIEpAIBAAKCAQEAl6Z2yRfK9jhmEPZUd9lgsma/kRBXhLuqmxWnQF0yq6exOGbXS6SZrnVKIWiqEAN+iUxUQ3GK6yaCkjRww9Y64dguxJU+tzcZWHpbg7xRUyBPCg34zJQzFN1ZoOaRcaAzPR1jq1SY5L+05r11DkHl1CvRIQZ0ZtaTFI8gjoR1tQF8jakb0hFCjew28D5BU/bTRAnt8co1f6I6g4P2qjR9c6jhVEc2Qm/+rd/N25FTKsGaxc9YZYzexjZQEv5T0oYwPmLVATiVBIcjtuV9u1D1EAtE8A33vcyqHagseywPjKMn7GSdZpWvTPaGvOWRq4F502rm3S0UE/9aLeovVuqTawIDAQABAoIBACdBozw5GYQVY25+pa0Eq4BjErH1ngIxJl/RAiOqPISs+zZTgOYG7PV5TUBKvMM6dFYMWT/AM6rdpC0+v/YiDcoK0Uh4Lez1qWz695epdw/irDM5HK+wqWx8REhfh0T3qGvooLVoR8/nRGf6oUOYkWsUEKXQ6u74GsjWqCHcbi/1lWn33OeZNfhJVch9/PwVIGWVbVsb0vLGkULxeY5CmEugeDYiPjYIL8xQKBnLTsqUra8MRVI1tUbDw4pqsDRyY935WuitNfgYJJbnFLdZ5mvmx7/As+eVJdyyhZ89+A8Cut42TZ13fpO6MMT05jlpnPnmvlR4u3ruvMrhGMGQgCkCgYEAzymol+fyzkt4VlTQDXrhoTuJP9JT+kMGkhL1o8mMlQm7+9+RhTsroUGOYh98V0Fl9vRQ8dUh3FwgppnJ+ngoFWegU0J6F4senJ8UW55RlmnSve+6MfoLVMHLSdWng2sMqsl9bEDmu0Yyum6Lg0TS8HfTsZ6Nwty+YV0rFuQc/w0CgYEAu2abvzX5XqSyxV9cbz2gA+SH8HcOUlCzMphSYRDpPRwn1wF5+cHsSa2RQoo/vW0OMdF+k36cis4GPEudThBQAZKrvOl98OCLyE+UPHgCrYbzlj/F/joLSENdu6xE5Mjcy2DYMfsJqGw3uejFie/0/EJwplruFlM2St1sdCPF/lcCgYEAjo1DByzD5vMF3ppEBFKfelxGiJVJ1jdTCSdkwo0JYPEu2xYvw7dAwZkjyh+SZ1SIPpRGMvMPdtwqV5oR43nVU01YhJKFAzhnGy1YS+c4i0FMlAinXoaKT4t/QNJ1j7gVIly+IsTSQOIAPEufUvgEExbRpDLPp9xQYR1Ebl8QGO0CgYEAjp2o+5yE2bz3e/N1sgaxByVdOugwEv7tURzQ3KP1DJenzh2GiUdGnk+j04LIvU0IV2t6K59YXN4rqqlU3nrVmEzZu9vqB22rk1bUliwyxYKFUBvafv4HZgg2hkO07nPabECYZ3kHwZAR3L7DzpS52VxqxH9A3+aV0+WsyroKzOMCgYBxnV/g7haZUaumgVl/LHK+Riz5E/cs6pTaGVhgQQhsAzgso9D9trcaxg9v82i8lvfGN8NoRR9Un/CkOvXB4aFPugnDh1WxJ29IC8G+8zVkxpk6z2wfRaUYrbCFsDouZBz2iJKvD2uPtqGh/ZDUsYald/PM1CLVuAhY4f3T4l56Rg==",
+          "certificates": {
+            "certificate": [
+              {
+                "name": "servercert",
+                "cert-data": "MIIEQDCCAyigAwIBAgIUFExHIPRj5tbG3QL9BgvyTCkUVy4wDQYJKoZIhvcNAQELBQAwgZkxCzAJBgNVBAYTAkFUMRYwFAYDVQQIDA1VcHBlciBBdXN0cmlhMRMwEQYDVQQHDApFZ2dlbHNiZXJnMScwJQYDVQQKDB5CJlIgSW5kdXN0cmlhbCBBdXRvbWF0aW9uIEdtYkgxDzANBgNVBAMMBkImUiBDQTEjMCEGCSqGSIb3DQEJARYUY2FAYnItYXV0b21hdGlvbi5jb20wHhcNMjYwNzIwMDcwNDM5WhcNMzYwNzE3MDcwNDM5WjCBqjELMAkGA1UEBhMCQVQxFjAUBgNVBAgMDVVwcGVyIEF1c3RyaWExEzARBgNVBAcMCkVnZ2Vsc2JlcmcxJzAlBgNVBAoMHkImUiBJbmR1c3RyaWFsIEF1dG9tYXRpb24gR21iSDEcMBoGA1UEAwwTYWNvcG9zLTAwQkJDQ0RERUUwMDEnMCUGCSqGSIb3DQEJARYYc2VydmVyQGJyLWF1dG9tYXRpb24uY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl6Z2yRfK9jhmEPZUd9lgsma/kRBXhLuqmxWnQF0yq6exOGbXS6SZrnVKIWiqEAN+iUxUQ3GK6yaCkjRww9Y64dguxJU+tzcZWHpbg7xRUyBPCg34zJQzFN1ZoOaRcaAzPR1jq1SY5L+05r11DkHl1CvRIQZ0ZtaTFI8gjoR1tQF8jakb0hFCjew28D5BU/bTRAnt8co1f6I6g4P2qjR9c6jhVEc2Qm/+rd/N25FTKsGaxc9YZYzexjZQEv5T0oYwPmLVATiVBIcjtuV9u1D1EAtE8A33vcyqHagseywPjKMn7GSdZpWvTPaGvOWRq4F502rm3S0UE/9aLeovVuqTawIDAQABo20wazApBgNVHREEIjAgghNhY29wb3MtMDBCQkNDRERFRTAwgglsb2NhbGhvc3QwHQYDVR0OBBYEFGNopk/ycHQOLl2xrITiBuTR0GQ2MB8GA1UdIwQYMBaAFPO+TIKvEDikrtSc3pfwMecM4iM6MA0GCSqGSIb3DQEBCwUAA4IBAQBcWNhqwLTPitC+SIzioCsr9bv7K4EfV8y84CwPCWNBHZ5fMP0YKinCQRXxR5WIveIvQg+Fkc8grDaRuawn0Q6uNxoFEnKA6ahXrYQaZR8QHX/3n3t4HrG7Pl9KRo7au/+jDHfjb8Hjax/yYMeM6/O8R40qATAIgLvkpwwW0sPJSM6NDKwPFcNWJLhoYJyZ0Fv8SuG8+gTip40nnQOvEwykrzSjdHzEMEQVUI/zicGvx/b7fFnrcSalhbtUuIACA0wPRmwn8s1PNAOq6rM5EqKGUZXbWRb/q4zZFOaaSE9/W33o4kH4kHMUZxw1IqYIgfeccDv+bN4+Xx0aL6ZbvmTp"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "ietf-truststore:truststore": {
+    "certificate-bags": {
+      "certificate-bag": [
+        {
+          "name": "cacerts",
+          "certificate": [
+            {
+              "name": "cacert",
+              "cert-data": "MIIEFTCCAv2gAwIBAgIUZZij35J6huJKBAAo2i+a27ez0IswDQYJKoZIhvcNAQELBQAwgZkxCzAJBgNVBAYTAkFUMRYwFAYDVQQIDA1VcHBlciBBdXN0cmlhMRMwEQYDVQQHDApFZ2dlbHNiZXJnMScwJQYDVQQKDB5CJlIgSW5kdXN0cmlhbCBBdXRvbWF0aW9uIEdtYkgxDzANBgNVBAMMBkImUiBDQTEjMCEGCSqGSIb3DQEJARYUY2FAYnItYXV0b21hdGlvbi5jb20wHhcNMjYwNzIwMDcwNDM5WhcNMzYwNzE3MDcwNDM5WjCBmTELMAkGA1UEBhMCQVQxFjAUBgNVBAgMDVVwcGVyIEF1c3RyaWExEzARBgNVBAcMCkVnZ2Vsc2JlcmcxJzAlBgNVBAoMHkImUiBJbmR1c3RyaWFsIEF1dG9tYXRpb24gR21iSDEPMA0GA1UEAwwGQiZSIENBMSMwIQYJKoZIhvcNAQkBFhRjYUBici1hdXRvbWF0aW9uLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOYj+4QIzkRvQmsqbiXP4DMdn24oR+H0XjsU2SQLvr4SkA9mqhNzKkMqsRHYTW/hP2li+tWqB24jzfr0f80a7YsSGclQ2ecTK+GEFmY1O7ikfCB6KkkjvpwQvgLKJ7nKOZ/cFcYd/IGZptuDVziZryIZrGXo3Ega+gc0ZEGpbHLngLcUCoelpwDJc2ZMrrJxvVDvssHKi/4ZUH4gEndGgNpA+mnWvjNe9pl8ELyh4SiPgm4vsa5ZQd1RhpdFrmkmxDLgufgVfhMuUA8UT9LFkSj4bnn1swRBLARX7ps+k8F3bTMerWXkIGqUKMSjIqacvzUlIjUHCSsccD6ihVR+n1ECAwEAAaNTMFEwHQYDVR0OBBYEFPO+TIKvEDikrtSc3pfwMecM4iM6MB8GA1UdIwQYMBaAFPO+TIKvEDikrtSc3pfwMecM4iM6MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBADklNvRlVjbQcz5VJY2yOA1aLnhHM8y5yFkPQuWnOtwJHyVdGXJnJJCaZbqBtHS45MCuNIY32coZwQDb9eTDgJAw1gHvWqc56s+kOopfg5Hrmc0wlPbIJ76OwfGDcOujHUs4asKcHaoiEdfro4cU2G3M1K7NwJ5aQWPGOEDpRJK9x9eo5n10arAEmCcpgUbJOlJHETRrtGP6Dx2FZmM14TTUDPQ+p9+EaTc4eusPtmWZeiLIb2ULsiHrXxeyecDgZzYHYhdOyK99gQhGhaiZYuYphWiPzumsYZ7aBfOVmydvTOhiV/dYHLQmFo7Om9T87PMr7XZBQ24YAPkFDAvHSt8="
+            }
+          ]
+        },
+        {
+          "name": "eecerts",
+          "certificate": [
+            {
+              "name": "eecert",
+              "cert-data": "MIIDvzCCAqcCFBRMRyD0Y+bWxt0C/QYL8kwpFFcvMA0GCSqGSIb3DQEBCwUAMIGZMQswCQYDVQQGEwJBVDEWMBQGA1UECAwNVXBwZXIgQXVzdHJpYTETMBEGA1UEBwwKRWdnZWxzYmVyZzEnMCUGA1UECgweQiZSIEluZHVzdHJpYWwgQXV0b21hdGlvbiBHbWJIMQ8wDQYDVQQDDAZCJlIgQ0ExIzAhBgkqhkiG9w0BCQEWFGNhQGJyLWF1dG9tYXRpb24uY29tMB4XDTI2MDcyMDA3MDQ0MFoXDTM2MDcxNzA3MDQ0MFowgZ0xCzAJBgNVBAYTAkFUMRYwFAYDVQQIDA1VcHBlciBBdXN0cmlhMRMwEQYDVQQHDApFZ2dlbHNiZXJnMScwJQYDVQQKDB5CJlIgSW5kdXN0cmlhbCBBdXRvbWF0aW9uIEdtYkgxDzANBgNVBAMMBmNsaWVudDEnMCUGCSqGSIb3DQEJARYYY2xpZW50QGJyLWF1dG9tYXRpb24uY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsLgxeie47eUjtaU1Ui2Mu08ZvxP07Fo3wh027LdgpyQd2gMrOBK+9CK3rdoRkNehcJTh/vwkdeADQcwdqXrWotW5mZwIiYY1qjSexCz7cjh7/1A7SPmS5bqW7YmvlR0hxG7IuV6GWfA9vDeULieIwip7JFDAe5eiFUUtiqT2k8NZ92CCQn6Tdt2dAO9gKM4WYLjFU5K41MbAGcQSMW32rJul2Ff4Ah/xwGPuosbxeU8x3PINzlsY2RIGPww/u0WP7YBNQdqcBs3UERaN+a+3ghC2UvKp3A7BRwHLBhazRB9OAc/ei6nNN+r3JCpM8QByrutpK1/SQ6Pf/dpNuLi69wIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQBiGafAJnJqkyx3w7B5KhU0HK6PS1SSnspv/94HaYYC2EKp3FplMw9ib+E8MZ76TNMf8/bXetCGif0jWwcwbv4p6pAYaA+HsZGqN7hYQgrUmcnyC4A5WyAa1DODbEymqzzSmoYf5sENq7zX94Tw3TmiNGyHNCz4C8Pqjea4qQS0kf2TXyfvFaHjNTKYy15H7JhoPKMr4lcDqmmMdANNoLgPMFCLPmV3OAtYV5RG0z7zIHFvZsFSSg6ftL842FjPQAEcpe1MCMzQreofjey0kJDgFgyld/hdGXJ1aRI+ZKlQt1sDylzgddfXTuedTTj8zzQJ72NFsX9pBYPVqRaEiIgO"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

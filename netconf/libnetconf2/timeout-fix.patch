@@ -1,0 +1,35 @@
+diff --git a/src/session.c b/src/session.c
+index e71c668..f60e807 100644
+--- a/src/session.c
++++ b/src/session.c
+@@ -50,7 +50,7 @@
+ #define NC_SERVER_CH_HELLO_TIMEOUT 180
+ 
+ /* in milliseconds */
+-#define NC_CLOSE_REPLY_TIMEOUT 200
++#define NC_CLOSE_REPLY_TIMEOUT 5000
+ 
+ void
+ nc_timeouttime_get(struct timespec *ts, uint32_t add_ms)
+diff --git a/src/session_p.h b/src/session_p.h
+index d548285..12ea7ab 100644
+--- a/src/session_p.h
++++ b/src/session_p.h
+@@ -71,7 +71,7 @@ extern struct nc_server_opts server_opts;
+ /**
+  * Timeout in msec for transport-related data to arrive (SSL_accept(), SSL_connect(), SSH channel open, subsystem start).
+  */
+-#define NC_TRANSPORT_MSG_TIMEOUT 2000
++#define NC_TRANSPORT_MSG_TIMEOUT 20000
+ 
+ /**
+  * Timeout in msec for acquiring a lock of a session (used with a condition, so higher numbers could be required
+@@ -92,7 +92,7 @@ extern struct nc_server_opts server_opts;
+ /**
+  * Timeout in msec for a thread to wait for its turn to work with a pollsession structure.
+  */
+-#define NC_PS_QUEUE_TIMEOUT 5000
++#define NC_PS_QUEUE_TIMEOUT 50000
+ 
+ /**
+  * @brief Maximum time (in seconds) to wait for a pending configuration

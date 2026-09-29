@@ -1,0 +1,436 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 49a791c..521197f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -117,8 +117,7 @@ set(libsrc
+     src/session_client.c
+     src/session_server.c
+     src/server_config.c
+-    src/server_config_util.c
+-    src/proxy_unix.c)
++    src/server_config_util.c)
+ 
+ if(ENABLE_SSH_TLS)
+     list(APPEND libsrc
+@@ -145,8 +144,7 @@ set(headers
+     src/session_client_ch.h
+     src/session_server.h
+     src/session_server_ch.h
+-    src/server_config.h
+-    src/proxy_unix.h)
++    src/server_config.h)
+ 
+ # files to generate doxygen from
+ set(doxy_files
+@@ -160,8 +158,7 @@ set(doxy_files
+     src/session_client_ch.h
+     src/session_server.h
+     src/session_server_ch.h
+-    src/server_config.h
+-    src/proxy_unix.h)
++    src/server_config.h)
+ 
+ # source files to be covered by the 'format' target
+ set(format_sources
+diff --git a/compat/compat.c b/compat/compat.c
+index 1dd9dc8..f3b6eca 100644
+--- a/compat/compat.c
++++ b/compat/compat.c
+@@ -31,7 +31,6 @@
+ #include <sys/socket.h>
+ #include <sys/time.h>
+ #include <sys/types.h>
+-#include <sys/un.h>
+ #include <time.h>
+ #include <unistd.h>
+ 
+diff --git a/src/session_client.c b/src/session_client.c
+index f02f227..5685a1c 100644
+--- a/src/session_client.c
++++ b/src/session_client.c
+@@ -36,7 +36,6 @@
+ #include <sys/socket.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+-#include <sys/un.h>
+ #include <unistd.h>
+ 
+ #ifdef NC_ENABLED_SSH_TLS
+@@ -1452,100 +1451,11 @@ nc_connect_unix_session(struct nc_session *session, int sock, const char *userna
+ API struct nc_session *
+ nc_connect_unix(const char *address, struct ly_ctx *ctx)
+ {
+-    struct nc_session *session = NULL;
+-    struct sockaddr_un sun;
+-    struct passwd *pw, pw_buf;
+-    char *username;
+-    int sock = -1;
+-    char *buf = NULL;
+-    size_t buf_size = 0;
+-
+-    NC_CHECK_ARG_RET(NULL, address, NULL);
+-
+-    sock = socket(AF_UNIX, SOCK_STREAM, 0);
+-    if (sock < 0) {
+-        ERR(NULL, "Failed to create socket (%s).", strerror(errno));
+-        goto fail;
+-    }
+-
+-    memset(&sun, 0, sizeof(sun));
+-    sun.sun_family = AF_UNIX;
+-    snprintf(sun.sun_path, sizeof(sun.sun_path), "%s", address);
+-
+-    if (connect(sock, (struct sockaddr *)&sun, sizeof(sun)) < 0) {
+-        ERR(NULL, "Cannot connect to sock server %s (%s)", address, strerror(errno));
+-        goto fail;
+-    }
+-
+-    if (fcntl(sock, F_SETFL, O_NONBLOCK) < 0) {
+-        ERR(NULL, "fcntl failed (%s).", strerror(errno));
+-        goto fail;
+-    }
+-
+-    /* prepare session structure */
+-    session = nc_new_session(NC_CLIENT, 0);
+-    NC_CHECK_ERRMEM_GOTO(!session, , fail);
+-    session->status = NC_STATUS_STARTING;
+-
+-    /* transport specific data */
+-    session->ti_type = NC_TI_UNIX;
+-    session->ti.unixsock.sock = sock;
+-    sock = -1;
+-
+-    session->path = strdup(address);
+-    if (!session->path) {
+-        ERRMEM;
+-        goto fail;
+-    }
++    (void)address;
++    (void)ctx;
+ 
+-    /* NETCONF username */
+-    if (client_unix_opts.username) {
+-        username = strdup(client_unix_opts.username);
+-    } else {
+-        pw = nc_getpw(geteuid(), NULL, &pw_buf, &buf, &buf_size);
+-        if (!pw) {
+-            ERR(NULL, "Failed to find username for UID %u.", (unsigned int)geteuid());
+-            goto fail;
+-        }
+-        username = strdup(pw->pw_name);
+-        free(buf);
+-    }
+-    NC_CHECK_ERRMEM_GOTO(!username, , fail);
+-    session->username = username;
++    ERR(NULL, "Connecting to a UNIX socket endpoint not supported.");
+ 
+-    /* connect UNIX session */
+-    if (nc_connect_unix_session(session, session->ti.unixsock.sock, session->username) != 1) {
+-        goto fail;
+-    }
+-
+-    /* create session context */
+-    if (nc_client_session_new_ctx(session, ctx) != EXIT_SUCCESS) {
+-        goto fail;
+-    }
+-    ctx = session->ctx;
+-
+-    /* NETCONF handshake */
+-    if (nc_handshake_io(session) != NC_MSG_HELLO) {
+-        goto fail;
+-    }
+-    session->status = NC_STATUS_RUNNING;
+-
+-    if (nc_ctx_check_and_fill(session) == -1) {
+-        goto fail;
+-    }
+-
+-    /* start monitoring the session if the monitoring thread is running */
+-    if (nc_client_monitoring_session_start(session)) {
+-        goto fail;
+-    }
+-
+-    return session;
+-
+-fail:
+-    nc_session_free(session, NULL);
+-    if (sock >= 0) {
+-        close(sock);
+-    }
+     return NULL;
+ }
+ 
+diff --git a/src/session_server.c b/src/session_server.c
+index 684a224..a797b7f 100644
+--- a/src/session_server.c
++++ b/src/session_server.c
+@@ -28,7 +28,6 @@
+ #include <sys/socket.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+-#include <sys/un.h>
+ #include <time.h>
+ #include <unistd.h>
+ 
+@@ -420,94 +419,12 @@ fail:
+ static int
+ nc_session_unix_construct_socket_path(const char *filename, char **path)
+ {
+-    int rc = 0, is_prefix, is_subdir, is_exact;
+-    char *full_path = NULL, *real_base_dir = NULL, *last_slash = NULL, *sock_dir_path = NULL;
+-    char *real_target_dir = NULL;
+-    struct sockaddr_un sun;
+-    size_t dir_len, base_len;
+-    const char *dir = server_opts.unix_socket_dir;
+-
+-    if (!dir) {
+-        ERR(NULL, "Cannot construct UNIX socket path \"%s\""
+-                " (no base directory set, see nc_set_unix_socket_dir()).", filename);
+-        return 1;
+-    }
+-
+-    if (filename[0] == '/') {
+-        ERR(NULL, "Cannot construct UNIX socket path \"%s\" (absolute path not allowed).", filename);
+-        return 1;
+-    }
+-
+-    /* construct the path to the UNIX socket */
+-    if (asprintf(&full_path, "%s/%s", dir, filename) == -1) {
+-        ERRMEM;
+-        rc = 1;
+-        goto cleanup;
+-    }
+-
+-    if (strlen(full_path) > sizeof(sun.sun_path) - 1) {
+-        ERR(NULL, "Socket path \"%s\" is too long.", full_path);
+-        rc = 1;
+-        goto cleanup;
+-    }
+-
+-    /* ensure the socket path is within the base directory */
+-    if (!(real_base_dir = realpath(dir, NULL))) {
+-        ERR(NULL, "realpath() failed for UNIX socket base directory \"%s\" (%s).", dir, strerror(errno));
+-        rc = 1;
+-        goto cleanup;
+-    }
+-
+-    /* find the last slash in the constructed path */
+-    last_slash = strrchr(full_path, '/');
+-    if (last_slash) {
+-        /* extract the directory part of the socket path */
+-        dir_len = last_slash - full_path;
+-        sock_dir_path = strndup(full_path, dir_len);
+-        NC_CHECK_ERRMEM_GOTO(!sock_dir_path, rc = 1, cleanup);
+-
+-        if (!(real_target_dir = realpath(sock_dir_path, NULL))) {
+-            ERR(NULL, "realpath() failed for UNIX socket path directory \"%s\" (%s).", sock_dir_path,
+-                    strerror(errno));
+-            rc = 1;
+-            goto cleanup;
+-        }
+-    } else {
+-        /* should not happen as we always add dir/filename */
+-        real_target_dir = strdup(real_base_dir);
+-        NC_CHECK_ERRMEM_GOTO(!real_target_dir, rc = 1, cleanup);
+-    }
+-
+-    base_len = strlen(real_base_dir);
+-
+-    /* check the relationship between both paths */
+-    is_prefix = (strncmp(real_base_dir, real_target_dir, base_len) == 0);
+-
+-    is_exact = (real_target_dir[base_len] == '\0');
++    (void)filename;
+ 
+-    is_subdir = (real_target_dir[base_len] == '/');
++    ERRINT;
+ 
+-    /* special case if base is '/' */
+-    if ((base_len == 1) && (real_base_dir[0] == '/')) {
+-        is_subdir = 1;
+-    }
+-
+-    if (!is_prefix || (!is_exact && !is_subdir)) {
+-        ERR(NULL, "UNIX socket path \"%s\" escapes the base directory \"%s\".", full_path, dir);
+-        rc = 1;
+-        goto cleanup;
+-    }
+-
+-    /* transfer ownership */
+-    *path = full_path;
+-    full_path = NULL;
+-
+-cleanup:
+-    free(real_base_dir);
+-    free(real_target_dir);
+-    free(sock_dir_path);
+-    free(full_path);
+-    return rc;
++    *path = NULL;
++    return LY_EINT;
+ }
+ 
+ char *
+@@ -548,112 +465,6 @@ nc_server_unix_get_socket_path(const struct nc_endpt *endpt)
+     return path;
+ }
+ 
+-/**
+- * @brief Create a listening socket (AF_UNIX).
+- *
+- * @param[in] address Path to the UNIX socket.
+- * @param[in] opts The server options (unix permissions).
+- * @return Listening socket, -1 on error.
+- */
+-static int
+-nc_sock_listen_unix(const char *address, const struct nc_server_unix_opts *opts)
+-{
+-    struct sockaddr_un sun;
+-    int sock = -1, flags;
+-
+-    if (!address) {
+-        ERR(NULL, "No socket path set.");
+-        goto fail;
+-    } else if (strlen(address) > sizeof(sun.sun_path) - 1) {
+-        ERR(NULL, "Socket path \"%s\" is longer than maximum length %d.", address, (int)(sizeof(sun.sun_path) - 1));
+-        goto fail;
+-    }
+-
+-    sock = socket(AF_UNIX, SOCK_STREAM, 0);
+-    if (sock == -1) {
+-        ERR(NULL, "Failed to create socket (%s).", strerror(errno));
+-        goto fail;
+-    }
+-
+-    memset(&sun, 0, sizeof(sun));
+-    sun.sun_family = AF_UNIX;
+-    snprintf(sun.sun_path, sizeof(sun.sun_path) - 1, "%s", address);
+-
+-    unlink(sun.sun_path);
+-    if (bind(sock, (struct sockaddr *)&sun, sizeof(sun)) == -1) {
+-        ERR(NULL, "Could not bind \"%s\" (%s).", address, strerror(errno));
+-        goto fail;
+-    }
+-
+-    if (opts->mode != (mode_t)-1) {
+-        if (chmod(sun.sun_path, opts->mode) < 0) {
+-            ERR(NULL, "Failed to set unix socket permissions (%s).", strerror(errno));
+-            goto fail;
+-        }
+-    }
+-
+-    if ((opts->uid != (uid_t)-1) || (opts->gid != (gid_t)-1)) {
+-        if (chown(sun.sun_path, opts->uid, opts->gid) < 0) {
+-            ERR(NULL, "Failed to set unix socket uid/gid (%s).", strerror(errno));
+-            goto fail;
+-        }
+-    }
+-
+-    /* make the socket non-blocking */
+-    if (((flags = fcntl(sock, F_GETFL)) == -1) || (fcntl(sock, F_SETFL, flags | O_NONBLOCK) == -1)) {
+-        ERR(NULL, "Fcntl failed (%s).", strerror(errno));
+-        goto fail;
+-    }
+-
+-    if (listen(sock, NC_REVERSE_QUEUE) == -1) {
+-        ERR(NULL, "Unable to start listening on \"%s\" (%s).", address, strerror(errno));
+-        goto fail;
+-    }
+-
+-    return sock;
+-
+-fail:
+-    if (sock > -1) {
+-        close(sock);
+-    }
+-    return -1;
+-}
+-
+-/**
+- * @brief Evaluate socket name for AF_UNIX socket.
+- * @param[in] acc_sock_fd is file descriptor for the accepted socket (a nonnegative).
+- * @param[out] host is pointer to char* to which the socket name will be set. It must not be NULL.
+- * @return 0 in case of success. Call free function for parameter host to avoid a memory leak.
+- * @return 0 if the stream socket is unnamed. Parameter host is set to NULL.
+- * @return -1 in case of error. Parameter host is set to NULL.
+- */
+-static int
+-nc_sock_host_unix(int acc_sock_fd, char **host)
+-{
+-    char *sun_path;
+-    struct sockaddr_storage saddr;
+-    socklen_t addr_len;
+-
+-    *host = NULL;
+-    saddr.ss_family = AF_UNIX;
+-    addr_len = sizeof(saddr);
+-
+-    if (getsockname(acc_sock_fd, (struct sockaddr *)&saddr, &addr_len)) {
+-        ERR(NULL, "getsockname failed (%s).", strerror(errno));
+-        return -1;
+-    }
+-
+-    sun_path = ((struct sockaddr_un *)&saddr)->sun_path;
+-    if (!sun_path) {
+-        /* stream socket is unnamed */
+-        return 0;
+-    }
+-
+-    NC_CHECK_ERRMEM_RET(!(*host = strdup(sun_path)), -1);
+-
+-    return 0;
+-}
+-
+ /**
+  * @brief Evaluate socket name and port number for AF_INET socket.
+  * @param[in] addr is pointing to structure filled by accept function which was successful.
+@@ -720,13 +531,10 @@ nc_sock_host_get(const struct sockaddr_storage *saddr, int client_sock, char **c
+ {
+     int rc = 0;
+ 
++    (void)client_sock;
++
+     /* learn information about the client end */
+-    if (saddr->ss_family == AF_UNIX) {
+-        if ((rc = nc_sock_host_unix(client_sock, client_address))) {
+-            goto cleanup;
+-        }
+-        *client_port = 0;
+-    } else if (saddr->ss_family == AF_INET) {
++    if (saddr->ss_family == AF_INET) {
+         if ((rc = nc_sock_host_inet((struct sockaddr_in *)saddr, client_address, client_port))) {
+             goto cleanup;
+         }
+@@ -758,16 +566,9 @@ static int
+ nc_sock_log_accepted(const struct sockaddr_storage *saddr, const struct nc_endpt *endpt, const struct nc_bind *bind,
+         const char *client_address, uint16_t client_port)
+ {
+-    char *unix_sockpath = NULL;
+-
+-    if (saddr->ss_family == AF_UNIX) {
+-        /* UNIX socket, get the socket path for logging,
+-         * UNIX socket connection can NOT be over call home (caller = client connect), so endpt is always available */
+-        assert(endpt);
+-        unix_sockpath = nc_server_unix_get_socket_path(endpt);
+-        VRB(NULL, "Accepted a new connection on %s.", unix_sockpath ? unix_sockpath : "UNIX socket");
+-        free(unix_sockpath);
+-    } else if (saddr->ss_family == AF_INET) {
++    (void)endpt;
++
++    if (saddr->ss_family == AF_INET) {
+         /* IPv4 socket */
+         VRB(NULL, "Accepted a new connection on %s:%" PRIu16 " from %s:%" PRIu16 ".", bind->address, bind->port,
+                 client_address, client_port);
+@@ -2744,10 +2545,8 @@ nc_server_bind_and_listen(struct nc_endpt *endpt, struct nc_bind *bind)
+ 
+     /* start listening on the endpoint */
+     if (endpt->ti == NC_TI_UNIX) {
+-        /* get the socket path for this endpoint */
+-        unix_path = nc_server_unix_get_socket_path(endpt);
+-        NC_CHECK_ERR_GOTO(!unix_path, rc = 1, cleanup);
+-        sock = nc_sock_listen_unix(unix_path, endpt->opts.unix);
++        ERR(NULL, "UNIX socket endpoint not supported.");
++        goto cleanup;
+     } else {
+         assert(bind->address && bind->port);
+         sock = nc_sock_listen_inet(bind->address, bind->port);

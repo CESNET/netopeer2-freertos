@@ -1,0 +1,14 @@
+diff --git a/config.h.cmake b/config.h.cmake
+index 8dce5273..0c2d4be8 100644
+--- a/config.h.cmake
++++ b/config.h.cmake
+@@ -1,9 +1,6 @@
+ /* Name of package */
+ #cmakedefine PACKAGE "${PROJECT_NAME}"
+ 
+-/* Version number of package */
+-#cmakedefine VERSION "${PROJECT_VERSION}"
+-
+ #cmakedefine SYSCONFDIR "${SYSCONFDIR}"
+ #cmakedefine BINARYDIR "${BINARYDIR}"
+ #cmakedefine SOURCEDIR "${SOURCEDIR}"

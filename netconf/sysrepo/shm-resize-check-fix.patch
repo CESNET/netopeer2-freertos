@@ -1,0 +1,48 @@
+diff --git a/src/common.c b/src/common.c
+index 86a1ab9e..d75e2da9 100644
+--- a/src/common.c
++++ b/src/common.c
+@@ -50,6 +50,7 @@
+ #include "config.h"
+ #include "context_change.h"
+ #include "edit_diff.h"
++#include "emb_posix.h"
+ #include "log.h"
+ #include "ly_wrap.h"
+ #include "lyd_mods.h"
+@@ -1512,8 +1513,9 @@ sr_shm_remap(sr_shm_t *shm, size_t new_shm_size)
+         return err_info;
+     }
+ 
+-    if ((!new_shm_size && (shm_file_size == shm->size)) || (new_shm_size && (new_shm_size == shm->size))) {
+-        /* mapping is fine, the size has not changed */
++    if ((embp_fd_shm_get_addr(shm->fd) == shm->addr) &&
++            ((!new_shm_size && (shm_file_size == shm->size)) || (new_shm_size && (new_shm_size == shm->size)))) {
++        /* mapping is fine, the address nor size has not changed */
+         return NULL;
+     }
+ 
+diff --git a/src/shm_ext.c b/src/shm_ext.c
+index 16d60df3..73e0b97b 100644
+--- a/src/shm_ext.c
++++ b/src/shm_ext.c
+@@ -36,6 +36,7 @@
+ #include <libyang/libyang.h>
+ 
+ #include "common.h"
++#include "emb_posix.h"
+ #include "log.h"
+ #include "shm_mod.h"
+ #include "shm_sub.h"
+@@ -69,7 +70,10 @@ sr_shmext_conn_remap_lock(sr_conn_ctx_t *conn, sr_lock_mode_t mode, int ext_lock
+         if ((err_info = sr_file_get_size(conn->ext_shm.fd, &shm_file_size))) {
+             goto error_ext_remap_unlock;
+         }
+-        if (shm_file_size != conn->ext_shm.size) {
++
++        /* checking based on size is not enough, it could have been enlarged and then made the previous size again,
++         * the address is different */
++        if ((embp_fd_shm_get_addr(conn->ext_shm.fd) != conn->ext_shm.addr) || (shm_file_size != conn->ext_shm.size)) {
+             /* ext SHM size changed and we need to remap it */
+             if (mode == SR_LOCK_READ_UPGR) {
+                 /* REMAP WRITE LOCK UPGRADE */

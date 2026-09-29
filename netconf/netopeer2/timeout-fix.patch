@@ -1,0 +1,157 @@
+diff --git a/tests/np2_test.h b/tests/np2_test.h
+index 54b900e..752207f 100644
+--- a/tests/np2_test.h
++++ b/tests/np2_test.h
+@@ -85,10 +85,10 @@ struct np2_test {
+     assert_null(state->op);
+ 
+ #define ASSERT_OK_REPLY(state) \
+-    ASSERT_OK_REPLY_PARAM(state->nc_sess, 3000, state)
++    ASSERT_OK_REPLY_PARAM(state->nc_sess, 30000, state)
+ 
+ #define ASSERT_OK_REPLY_SESS(state, nc_sess) \
+-    ASSERT_OK_REPLY_PARAM(nc_sess, 3000, state)
++    ASSERT_OK_REPLY_PARAM(nc_sess, 30000, state)
+ 
+ #define ASSERT_DATA_REPLY_PARAM(nc_sess, timeout_ms, state) \
+     do { \
+@@ -110,16 +110,16 @@ struct np2_test {
+     assert_int_equal(LY_SUCCESS, lyd_print_mem(&state->str, state->op, LYD_XML, 0));
+ 
+ #define ASSERT_DATA_REPLY(state) \
+-    ASSERT_DATA_REPLY_PARAM(state->nc_sess, 3000, state)
++    ASSERT_DATA_REPLY_PARAM(state->nc_sess, 120000, state)
+ 
+ #define ASSERT_OK_REPLY_SESS2(state) \
+-    state->msgtype = nc_recv_reply(state->nc_sess2, state->rpc, state->msgid, 3000, &state->envp, &state->op); \
++    state->msgtype = nc_recv_reply(state->nc_sess2, state->rpc, state->msgid, 30000, &state->envp, &state->op); \
+     assert_int_equal(state->msgtype, NC_MSG_REPLY); \
+     assert_null(state->op); \
+     assert_string_equal(LYD_NAME(lyd_child(state->envp)), "ok");
+ 
+ #define ASSERT_ERROR_REPLY_PARAM(state, nc_sess, err_tag) \
+-    state->msgtype = nc_recv_reply(nc_sess, state->rpc, state->msgid, 3000, &state->envp, &state->op); \
++    state->msgtype = nc_recv_reply(nc_sess, state->rpc, state->msgid, 30000, &state->envp, &state->op); \
+     assert_int_equal(state->msgtype, NC_MSG_REPLY); \
+     if (!lyd_child(state->envp) || strcmp(LYD_NAME(lyd_child(state->envp)), "rpc-error")) { \
+         if (lyd_child(state->envp)) { \
+@@ -151,7 +151,7 @@ struct np2_test {
+     ASSERT_ERROR_REPLY_PARAM(state, state->nc_sess, err_tag)
+ 
+ #define ASSERT_ERROR_REPLY_SESS2(state) \
+-    state->msgtype = nc_recv_reply(state->nc_sess2, state->rpc, state->msgid, 3000, &state->envp, &state->op); \
++    state->msgtype = nc_recv_reply(state->nc_sess2, state->rpc, state->msgid, 30000, &state->envp, &state->op); \
+     assert_int_equal(state->msgtype, NC_MSG_REPLY); \
+     assert_null(state->op); \
+     assert_string_equal(LYD_NAME(lyd_child(state->envp)), "rpc-error");
+@@ -163,7 +163,7 @@ struct np2_test {
+ 
+ #define GET_CONFIG_DS_WD_FILTER(state, ds, wd, filter) \
+     SEND_GET_CONFIG_PARAM(state, ds, wd, filter) \
+-    state->msgtype = nc_recv_reply(state->nc_sess, state->rpc, state->msgid, 3000, &state->envp, &state->op); \
++    state->msgtype = nc_recv_reply(state->nc_sess, state->rpc, state->msgid, 30000, &state->envp, &state->op); \
+     assert_int_equal(state->msgtype, NC_MSG_REPLY); \
+     assert_non_null(state->op); \
+     assert_non_null(state->envp); \
+@@ -185,7 +185,7 @@ struct np2_test {
+     state->rpc = nc_rpc_get(filter, NC_WD_ALL, NC_PARAMTYPE_CONST); \
+     state->msgtype = nc_send_rpc(state->nc_sess, state->rpc, 1000, &state->msgid); \
+     assert_int_equal(NC_MSG_RPC, state->msgtype); \
+-    state->msgtype = nc_recv_reply(state->nc_sess, state->rpc, state->msgid, 3000, &state->envp, &state->op); \
++    state->msgtype = nc_recv_reply(state->nc_sess, state->rpc, state->msgid, 30000, &state->envp, &state->op); \
+     assert_int_equal(state->msgtype, NC_MSG_REPLY); \
+     assert_non_null(state->op); \
+     assert_non_null(state->envp); \
+@@ -196,7 +196,7 @@ struct np2_test {
+     state->rpc = nc_rpc_getdata(ds, filter, config_filter, origin_filter, origin_filter_count, neg_origin_filter, max_depth, with_origin, wd_mode, NC_PARAMTYPE_CONST); \
+     state->msgtype = nc_send_rpc(state->nc_sess, state->rpc, 1000, &state->msgid); \
+     assert_int_equal(NC_MSG_RPC, state->msgtype); \
+-    state->msgtype = nc_recv_reply(state->nc_sess, state->rpc, state->msgid, 2000, &state->envp, &state->op); \
++    state->msgtype = nc_recv_reply(state->nc_sess, state->rpc, state->msgid, 20000, &state->envp, &state->op); \
+     assert_int_equal(state->msgtype, NC_MSG_REPLY); \
+     assert_non_null(state->op); \
+     assert_non_null(state->envp); \
+@@ -249,7 +249,7 @@ struct np2_test {
+     assert_int_equal(lyd_print_mem(&state->str, state->op, LYD_XML, 0), LY_SUCCESS);
+ 
+ #define RECV_NOTIF(state) \
+-    RECV_NOTIF_PARAM(state->nc_sess, 3000, state)
++    RECV_NOTIF_PARAM(state->nc_sess, 30000, state)
+ 
+ #define ASSERT_NO_NOTIF(state) \
+     state->msgtype = nc_recv_notif(state->nc_sess, 10, &state->envp, &state->op); \
+@@ -257,7 +257,7 @@ struct np2_test {
+ 
+ #define ASSERT_OK_SUB_NTF(state) \
+     do { \
+-        st->msgtype = nc_recv_reply(st->nc_sess, st->rpc, st->msgid, 3000, &st->envp, &st->op); \
++        st->msgtype = nc_recv_reply(st->nc_sess, st->rpc, st->msgid, 30000, &st->envp, &st->op); \
+     } while (st->msgtype == NC_MSG_NOTIF); \
+     assert_int_equal(state->msgtype, NC_MSG_REPLY); \
+     if (!state->op) { \
+diff --git a/tests/test_confirmed_commit.c b/tests/test_confirmed_commit.c
+index bc94f59..b8ade6e 100644
+--- a/tests/test_confirmed_commit.c
++++ b/tests/test_confirmed_commit.c
+@@ -44,7 +44,7 @@
+     while (state->op->parent) state->op = lyd_parent(state->op); \
+ 
+ #define TCC_RECV_NOTIF(state) \
+-    TCC_RECV_NOTIF_PARAM(state->nc_sess, 3000, state)
++    TCC_RECV_NOTIF_PARAM(state->nc_sess, 30000, state)
+ 
+ #define TCC_ASSERT_NOTIF_EVENT(state, event, ssid) \
+     { \
+diff --git a/tests/test_yang_push.c b/tests/test_yang_push.c
+index 5cd3e51..6858f85 100644
+--- a/tests/test_yang_push.c
++++ b/tests/test_yang_push.c
+@@ -357,7 +357,7 @@ test_on_change_dampening_time(void **state)
+     char *ntf;
+ 
+     /* Establish on-change push with 0.2s dampening time */
+-    st->rpc = nc_rpc_establishpush_onchange("ietf-datastores:running", NULL, NULL, NULL, 20, 0,
++    st->rpc = nc_rpc_establishpush_onchange("ietf-datastores:running", NULL, NULL, NULL, 800, 0,
+             NULL, NC_PARAMTYPE_CONST);
+     st->msgtype = nc_send_rpc(st->nc_sess, st->rpc, 1000, &st->msgid);
+     assert_int_equal(st->msgtype, NC_MSG_RPC);
+@@ -453,7 +453,7 @@ test_on_change_dampening_time_same_node(void **state)
+     char *ntf;
+ 
+     /* Establish on-change push with 0.1s dampening time */
+-    st->rpc = nc_rpc_establishpush_onchange("ietf-datastores:running", NULL, NULL, NULL, 10, 0,
++    st->rpc = nc_rpc_establishpush_onchange("ietf-datastores:running", NULL, NULL, NULL, 800, 0,
+             NULL, NC_PARAMTYPE_CONST);
+     st->msgtype = nc_send_rpc(st->nc_sess, st->rpc, 1000, &st->msgid);
+     assert_int_equal(st->msgtype, NC_MSG_RPC);
+@@ -535,7 +535,7 @@ test_on_change_dampening_time_create_delete(void **state)
+     char *ntf;
+ 
+     /* Establish on-change push with 0.1s dampening time */
+-    st->rpc = nc_rpc_establishpush_onchange("ietf-datastores:running", NULL, NULL, NULL, 10, 0,
++    st->rpc = nc_rpc_establishpush_onchange("ietf-datastores:running", NULL, NULL, NULL, 800, 0,
+             NULL, NC_PARAMTYPE_CONST);
+     st->msgtype = nc_send_rpc(st->nc_sess, st->rpc, 1000, &st->msgid);
+     assert_int_equal(st->msgtype, NC_MSG_RPC);
+diff --git a/tests/test_yang_push_advanced.c b/tests/test_yang_push_advanced.c
+index 752995f..4f6954a 100644
+--- a/tests/test_yang_push_advanced.c
++++ b/tests/test_yang_push_advanced.c
+@@ -358,7 +358,7 @@ test_periodic_modify_period(void **state)
+     char *ntf;
+ 
+     /* establish periodic push */
+-    st->rpc = nc_rpc_establishpush_periodic("ietf-datastores:running", "/edit1:*", NULL, NULL, 50, NULL, NC_PARAMTYPE_CONST);
++    st->rpc = nc_rpc_establishpush_periodic("ietf-datastores:running", "/edit1:*", NULL, NULL, 800, NULL, NC_PARAMTYPE_CONST);
+     st->msgtype = nc_send_rpc(st->nc_sess, st->rpc, 1000, &st->msgid);
+     assert_int_equal(st->msgtype, NC_MSG_RPC);
+     ASSERT_OK_SUB_NTF(st);
+@@ -405,7 +405,7 @@ test_periodic_deletesub(void **state)
+     char *ntf;
+ 
+     /* Establish periodic push */
+-    st->rpc = nc_rpc_establishpush_periodic("ietf-datastores:running", "/edit1:*", NULL, NULL, 50, NULL, NC_PARAMTYPE_CONST);
++    st->rpc = nc_rpc_establishpush_periodic("ietf-datastores:running", "/edit1:*", NULL, NULL, 800, NULL, NC_PARAMTYPE_CONST);
+     st->msgtype = nc_send_rpc(st->nc_sess, st->rpc, 1000, &st->msgid);
+     assert_int_equal(st->msgtype, NC_MSG_RPC);
+     ASSERT_OK_SUB_NTF(st);

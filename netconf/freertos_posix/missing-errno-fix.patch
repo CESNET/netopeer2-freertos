@@ -1,0 +1,24 @@
+diff --git a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_clock.c b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_clock.c
+index 51e592a..3ea8c7c 100755
+--- a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_clock.c
++++ b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_clock.c
+@@ -29,6 +29,7 @@
+  */
+ 
+ /* C standard library includes. */
++#include <errno.h>
+ #include <stddef.h>
+ #include <string.h>
+ 
+diff --git a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_timer.c b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_timer.c
+index 33485ae..f43859e 100755
+--- a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_timer.c
++++ b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_timer.c
+@@ -29,6 +29,7 @@
+  */
+ 
+ /* C standard library includes. */
++#include <errno.h>
+ #include <stddef.h>
+ 
+ /* FreeRTOS+POSIX includes. */

@@ -1,0 +1,26 @@
+diff --git a/lib/doh.c b/lib/doh.c
+index 33e714166..d62559b58 100644
+--- a/lib/doh.c
++++ b/lib/doh.c
+@@ -65,7 +65,7 @@ static const char * const errors[]={
+ 
+ static const char *doh_strerror(DOHcode code)
+ {
+-  if((code >= DOH_OK) && (code <= DOH_DNS_NAME_TOO_LONG))
++  if(code <= DOH_DNS_NAME_TOO_LONG)
+     return errors[code];
+   return "bad error code";
+ }
+diff --git a/lib/file.c b/lib/file.c
+index bee9e92ec..111af46d2 100644
+--- a/lib/file.c
++++ b/lib/file.c
+@@ -544,7 +544,7 @@ static CURLcode file_do(struct Curl_easy *data, bool *done)
+ 
+   if(data->state.resume_from) {
+     if(data->state.resume_from !=
+-       lseek(fd, data->state.resume_from, SEEK_SET))
++       lseek(fd, (off_t)data->state.resume_from, SEEK_SET))
+       return CURLE_BAD_DOWNLOAD_RESUME;
+   }
+ 

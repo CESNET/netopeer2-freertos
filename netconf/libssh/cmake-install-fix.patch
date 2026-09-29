@@ -1,0 +1,22 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 199acbd9..d4d1b2d0 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -378,17 +378,6 @@ if (WITH_COVERAGE)
+     append_coverage_compiler_flags_to_target(ssh)
+ endif (WITH_COVERAGE)
+ 
+-
+-install(TARGETS ssh
+-        EXPORT libssh-config
+-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+-        COMPONENT libraries)
+-
+-install(EXPORT libssh-config
+-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+-
+ if (BUILD_STATIC_LIB)
+   add_library(ssh-static STATIC ${libssh_SRCS})
+   target_compile_options(ssh-static

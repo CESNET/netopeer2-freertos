@@ -1,0 +1,25 @@
+diff --git a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
+index f063160..d12e450 100755
+--- a/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
++++ b/FreeRTOS-Plus-POSIX/source/FreeRTOS_POSIX_pthread.c
+@@ -536,9 +536,19 @@ int pthread_detach(pthread_t pthread)
+ 
+ pthread_t pthread_self( void )
+ {
++    pthread_internal_t * pxThread;
++
+     /* Return a reference to this pthread object, which is stored in the
+      * FreeRTOS task tag. */
+-    return ( pthread_t ) xTaskGetApplicationTaskTag( NULL );
++    pxThread = ( pthread_internal_t *) xTaskGetApplicationTaskTag( NULL );
++    if ( pxThread )
++    {
++        return ( pthread_t ) pxThread;
++    }
++
++    /* Not a task created by pthread_create(), return its handle,
++     * which must be unique. */
++    return ( pthread_t ) xTaskGetCurrentTaskHandle();
+ }
+ 
+ /*-----------------------------------------------------------*/

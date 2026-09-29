@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 13330ea3..2dda8fee 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -202,7 +202,7 @@ if (WITH_COVERAGE)
+         DEPENDENCIES ssh tests)
+ endif (WITH_COVERAGE)
+ 
+-add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source DEPENDS ${_SYMBOL_TARGET} VERBATIM)
++#add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source DEPENDS ${_SYMBOL_TARGET} VERBATIM)
+ 
+ get_directory_property(hasParent PARENT_DIRECTORY)
+ if(NOT(hasParent))

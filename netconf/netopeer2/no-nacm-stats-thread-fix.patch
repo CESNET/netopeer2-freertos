@@ -1,0 +1,14 @@
+diff --git a/src/main.c b/src/main.c
+index 083dfb1..2549525 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1303,9 +1303,6 @@ server_data_subscribe(void)
+     if (sr_nacm_init(np2srv.sr_sess, 0, &np2srv.sr_data_sub)) {
+         goto error;
+     }
+-    if (sr_nacm_glob_stats_subscribe(np2srv.sr_sess, 0, &np2srv.sr_nacm_stats_sub)) {
+-        goto error;
+-    }
+ 
+     /*
+      * ietf-subscribed-notifications

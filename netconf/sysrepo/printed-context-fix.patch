@@ -1,0 +1,81 @@
+diff --git a/src/context_change.c b/src/context_change.c
+index 53332f56..29075a48 100644
+--- a/src/context_change.c
++++ b/src/context_change.c
+@@ -1210,14 +1210,10 @@ sr_lycc_store_context(sr_shm_t *shm, struct ly_ctx *ctx)
+     sr_error_info_t *err_info = NULL;
+     int ctx_size = 0, fd = -1;
+     void *mem = NULL, *mem_end;
+-    char *shm_name_tmp = NULL, *shm_name = NULL;
+-
+-    if (!SR_PRINTED_LYCTX_ADDRESS) {
+-        /* printed context not supported */
+-        goto cleanup;
+-    }
++    char *shm_name = NULL;
+ 
+-    if ((err_info = sr_path_ctx_shm(1, &shm_name_tmp))) {
++    if (!SR_PRINTED_LYCTX_ADDRESS || ly_ctx_is_printed(ctx)) {
++        /* printed context not supported or already printed */
+         goto cleanup;
+     }
+ 
+@@ -1225,7 +1221,7 @@ sr_lycc_store_context(sr_shm_t *shm, struct ly_ctx *ctx)
+         goto cleanup;
+     }
+ 
+-    fd = sr_open(shm_name_tmp, O_RDWR | O_CREAT | O_TRUNC, SR_SHM_PERM);
++    fd = sr_open(shm_name, O_RDWR | O_CREAT | O_TRUNC, SR_SHM_PERM);
+     if (fd == -1) {
+         sr_errinfo_new(&err_info, SR_ERR_SYS, "Failed to open ctx shared memory (%s).", strerror(errno));
+         goto cleanup;
+@@ -1234,12 +1230,6 @@ sr_lycc_store_context(sr_shm_t *shm, struct ly_ctx *ctx)
+     /* get the size of the compiled context */
+     ctx_size = ly_ctx_compiled_size(ctx);
+ 
+-    /* truncate the shared memory to the size of the printed context */
+-    if (ftruncate(fd, ctx_size)) {
+-        sr_errinfo_new(&err_info, SR_ERR_SYS, "Failed to truncate the printed context (%s).", strerror(errno));
+-        goto cleanup;
+-    }
+-
+     /* unmap to avoid collision */
+     if (shm->addr) {
+         munmap(shm->addr, shm->size);
+@@ -1261,9 +1251,9 @@ sr_lycc_store_context(sr_shm_t *shm, struct ly_ctx *ctx)
+         goto cleanup;
+     }
+ 
+-    /* rename so that existing maps can still access the old content */
+-    if (rename(shm_name_tmp, shm_name) == -1) {
+-        sr_errinfo_new(&err_info, SR_ERR_SYS, "Failed to rename %s to %s (%s)", shm_name_tmp, shm_name, strerror(errno));
++    /* write also into the file, the mapping does not work */
++    if (write(fd, mem, ctx_size) != ctx_size) {
++        sr_errinfo_new(&err_info, SR_ERR_SYS, "Failed to write the context into a file (%s).", strerror(errno));
+         goto cleanup;
+     }
+ 
+@@ -1277,10 +1267,6 @@ sr_lycc_store_context(sr_shm_t *shm, struct ly_ctx *ctx)
+     sr_yang_ctx.ly_ctx = NULL;
+ 
+ cleanup:
+-    if (err_info && shm_name_tmp) {
+-        unlink(shm_name_tmp);
+-    }
+-    free(shm_name_tmp);
+     free(shm_name);
+     if (fd > -1) {
+         close(fd);
+@@ -1348,6 +1334,12 @@ sr_lycc_load_context(sr_shm_t *shm, struct ly_ctx **ctx)
+         shm->size = shm_file_size;
+     }
+ 
++    /* read from the file, the mapping does not work */
++    if (read(shm->fd, shm->addr, shm->size) != shm->size) {
++        sr_errinfo_new(&err_info, SR_ERR_SYS, "Failed to read the context from a file (%s).", strerror(errno));
++        goto cleanup;
++    }
++
+     /* get the printed context */
+     if ((err_info = sr_ly_ctx_new_printed(shm->addr, ctx))) {
+         goto cleanup;

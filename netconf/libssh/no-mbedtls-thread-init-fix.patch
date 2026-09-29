@@ -1,0 +1,30 @@
+diff --git a/src/threads/mbedtls.c b/src/threads/mbedtls.c
+index 6cc3fa53..ca7b13e4 100644
+--- a/src/threads/mbedtls.c
++++ b/src/threads/mbedtls.c
+@@ -40,14 +40,8 @@ int crypto_thread_init(struct ssh_threads_callbacks_struct *user_callbacks)
+     }
+ #ifdef MBEDTLS_THREADING_ALT
+     else {
+-        if (user_callbacks != NULL) {
+-            crypto_thread_finalize();
+-        }
+-
+-        mbedtls_threading_set_alt(user_callbacks->mutex_init,
+-                                  user_callbacks->mutex_destroy,
+-                                  user_callbacks->mutex_lock,
+-                                  user_callbacks->mutex_unlock);
++        /* mbedtls_threading_set_alt() was supposed to have already been called */
++        return SSH_OK;
+     }
+ #elif defined MBEDTLS_THREADING_PTHREAD
+     return SSH_OK;
+@@ -59,7 +53,7 @@ int crypto_thread_init(struct ssh_threads_callbacks_struct *user_callbacks)
+ void crypto_thread_finalize(void)
+ {
+ #ifdef MBEDTLS_THREADING_ALT
+-    mbedtls_threading_free_alt();
++    /* supposed to be managed outside libssh context */
+ #endif
+     return;
+ }
