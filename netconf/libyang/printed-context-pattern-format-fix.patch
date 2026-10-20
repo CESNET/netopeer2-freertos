@@ -1,0 +1,12 @@
+diff --git a/src/printer_context.c b/src/printer_context.c
+index 2b5871c99..f24022f4f 100644
+--- a/src/printer_context.c
++++ b/src/printer_context.c
+@@ -1043,6 +1043,7 @@ ctxp_pattern(const struct lysc_pattern *orig_pattern, struct lysc_pattern **patt
+     }
+ 
+     p->inverted = orig_pattern->inverted;
++    p->format = orig_pattern->format;
+     p->refcount = orig_pattern->refcount;
+ 
+     /* shared */

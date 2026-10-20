@@ -269,6 +269,9 @@ message("CONFIG: # libyang")
 FetchContent_Declare(libyang
         GIT_REPOSITORY https://github.com/CESNET/libyang
         GIT_TAG v5.8.6
+        PATCH_COMMAND git apply
+            ${PROJECT_SOURCE_DIR}/libyang/printed-context-pattern-format-fix.patch
+        UPDATE_DISCONNECTED 1
 )
 
 set(HAVE_TIMEGM OFF)
