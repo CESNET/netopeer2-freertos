@@ -307,10 +307,24 @@ set(ENABLE_SYSREPO_NOTIFD OFF)
 set(NOTIFD_SETUP OFF)
 set(HAVE_STRDUPA 1)
 set(REPO_PATH "/tmp/sr") # all files will be temporary except for the following
-set(STARTUP_DATA_PATH "/etc/sysrepo/data") # startup datastore files persistent
-set(FACTORY_DEFAULT_DATA_PATH "/etc/sysrepo/data") # factory-default datastore files persistent
-set(NOTIFICATION_PATH "/etc/sysrepo/data/notif") # notifications for replay persistent
-set(YANG_MODULE_PATH "/etc/sysrepo/yang") # YANG modules persistent
+# Default paths for sysrepo data and YANG modules
+if(NOT DEFINED NETCONF_SYSREPO_STARTUP_PATH)
+    set(NETCONF_SYSREPO_STARTUP_PATH "/etc/sysrepo/data")
+endif()
+if(NOT DEFINED NETCONF_SYSREPO_FACTORY_DEFAULT_PATH)
+    set(NETCONF_SYSREPO_FACTORY_DEFAULT_PATH "/etc/sysrepo/data")
+endif()
+if(NOT DEFINED NETCONF_SYSREPO_NOTIFICATION_PATH)
+    set(NETCONF_SYSREPO_NOTIFICATION_PATH "/etc/sysrepo/data/notif")
+endif()
+if(NOT DEFINED NETCONF_SYSREPO_YANG_PATH)
+    set(NETCONF_SYSREPO_YANG_PATH "/etc/sysrepo/yang")
+endif()
+set(STARTUP_DATA_PATH "${NETCONF_SYSREPO_STARTUP_PATH}")
+set(FACTORY_DEFAULT_DATA_PATH "${NETCONF_SYSREPO_FACTORY_DEFAULT_PATH}")
+set(NOTIFICATION_PATH "${NETCONF_SYSREPO_NOTIFICATION_PATH}")
+set(YANG_MODULE_PATH "${NETCONF_SYSREPO_YANG_PATH}")
+# Include and library paths for libyang
 set(LIBYANG_INCLUDE_DIRS ${libyang_BINARY_DIR})
 set(LIBYANG_LIBRARIES ${LIBRARY_OUTPUT_PATH}/yang)
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_POSIX_TIMERS)
